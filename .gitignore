@@ -1,0 +1,15 @@
+node_modules
+.DS_Store
+dist
+.vite
+vendor
+
+# Downloaded/built artifacts (run scripts/setup-*.sh to populate)
+public/circt/
+public/surfer/
+
+# Dev screenshots and test artifacts
+*.png
+*.pdf
+.playwright-mcp/
+playwright-console.log

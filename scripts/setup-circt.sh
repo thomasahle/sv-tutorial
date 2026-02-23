@@ -20,15 +20,16 @@ CIRCT fork checkout is ready.
 Next:
 1. Build wasm artifacts from the fork checkout.
 2. Copy generated runtime files to:
+   public/circt/circt-verilog.js
+   public/circt/circt-verilog.wasm
    public/circt/circt-bmc.js
    public/circt/circt-bmc.wasm
    public/circt/circt-sim.js
    public/circt/circt-sim.wasm
    (or provide a custom shim pair: circt.js + circt.wasm)
 3. Optionally override URLs with:
-   VITE_CIRCT_WASM_JS_URL
-   VITE_CIRCT_WASM_URL
-   VITE_CIRCT_WASM_JS_URLS
-   VITE_CIRCT_WASM_URLS
+   VITE_CIRCT_VERILOG_JS_URL / VITE_CIRCT_VERILOG_WASM_URL
+   VITE_CIRCT_SIM_JS_URL / VITE_CIRCT_SIM_WASM_URL
+   VITE_CIRCT_BMC_JS_URL / VITE_CIRCT_BMC_WASM_URL
 
 MSG
