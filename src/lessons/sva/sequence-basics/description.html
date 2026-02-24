@@ -7,3 +7,4 @@
 <p>Open <code>grant_check.sv</code>. The spec is: <em>when <code>cStart</code> is high, <code>req</code> must be high the same cycle and <code>gnt</code> must be high exactly 2 cycles later.</em></p>
 <p>Fill in the sequence body, the property body, and add the <code>assert property</code> statement.</p>
 <blockquote><p>A property is never evaluated on its own — it must be <strong>asserted</strong>, <strong>covered</strong>, or <strong>assumed</strong>.</p></blockquote>
+<blockquote><p>When the model checker finds a violation it outputs a counterexample — inspect the <strong>Waves</strong> tab to see the exact cycle-by-cycle signal values that triggered the failure.</p></blockquote>

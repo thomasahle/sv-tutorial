@@ -6,3 +6,4 @@
 <p>These are more precise than a bare level check: <code>$rose(req)</code> triggers once per rising edge, not on every cycle that <code>req</code> stays high.</p>
 <p>Open <code>edge_check.sv</code>. The spec is: <em>when chip-select <code>cs_n</code> falls (goes active-low), <code>ack</code> must rise within 1–2 clock cycles.</em></p>
 <p>Complete the property using <code>$fell(cs_n) |=> ##[0:1] $rose(ack)</code>.</p>
+<blockquote><p>The <strong>Waves</strong> tab shows the counterexample when an assertion fails. You can see exactly when <code>cs_n</code> fell and whether <code>ack</code> rose in time — transitions are far easier to read in a waveform than in text logs.</p></blockquote>
