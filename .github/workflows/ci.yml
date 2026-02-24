@@ -63,6 +63,12 @@ jobs:
       - name: Setup Surfer assets
         run: scripts/setup-surfer.sh
 
+      - name: Configure git credentials for private CIRCT fork
+        run: |
+          git config --global url."https://x-access-token:${CIRCT_TOKEN}@github.com/".insteadOf "https://github.com/"
+        env:
+          CIRCT_TOKEN: ${{ secrets.CIRCT_TOKEN }}
+
       - name: Setup pinned CIRCT checkout
         run: scripts/setup-circt.sh
 
