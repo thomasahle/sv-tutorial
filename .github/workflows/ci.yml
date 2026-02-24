@@ -1,0 +1,76 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      CIRCT_WASM_JOBS: "4"
+      CIRCT_WASM_CONFIGURE_TIMEOUT_MIN: "45"
+      CIRCT_WASM_BUILD_TIMEOUT_MIN: "150"
+      CIRCT_WASM_CLEAN_BUILD: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Restore emsdk cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/emsdk
+          key: emsdk-${{ runner.os }}-4.0.21
+
+      - name: Install host prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rsync unzip ninja-build
+
+      - name: Install emsdk 4.0.21
+        run: |
+          EMSDK_DIR="$GITHUB_WORKSPACE/.cache/emsdk"
+          if [ ! -d "$EMSDK_DIR/.git" ]; then
+            rm -rf "$EMSDK_DIR"
+            git clone https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
+          fi
+          "$EMSDK_DIR/emsdk" install 4.0.21
+          "$EMSDK_DIR/emsdk" activate 4.0.21
+          echo "EMSDK=$EMSDK_DIR" >> "$GITHUB_ENV"
+          echo "$EMSDK_DIR" >> "$GITHUB_PATH"
+          echo "$EMSDK_DIR/upstream/emscripten" >> "$GITHUB_PATH"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Validate requirements
+        run: scripts/check-requirements.sh --with-wasm
+
+      - name: Setup Surfer assets
+        run: scripts/setup-surfer.sh
+
+      - name: Setup pinned CIRCT checkout
+        run: scripts/setup-circt.sh
+
+      - name: Build CIRCT wasm artifacts
+        run: scripts/build-circt-wasm.sh
+
+      - name: Sync CIRCT wasm into app
+        run: npm run sync:circt
+
+      - name: Build tutorial app
+        run: npm run build

@@ -89,7 +89,35 @@ export default defineConfig({
   build: {
     // Single chunk is ~218 kB gzipped (CodeMirror + Svelte + CIRCT adapter).
     // The raw size exceeds Rollup's 500 kB default but gzip makes it fine.
-    chunkSizeWarningLimit: 800
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+
+          // Keep editor code in a dedicated, cacheable chunk so lesson content
+          // and runtime updates do not invalidate it.
+          if (
+            id.includes('/codemirror/') ||
+            id.includes('/@codemirror/') ||
+            id.includes('/@lezer/')
+          ) {
+            return 'editor-vendor';
+          }
+
+          // Keep framework/UI deps separate from lesson/runtime code.
+          if (
+            id.includes('/svelte/') ||
+            id.includes('/@sveltejs/') ||
+            id.includes('/bits-ui/') ||
+            id.includes('/tailwind-merge/') ||
+            id.includes('/tailwind-variants/')
+          ) {
+            return 'framework-vendor';
+          }
+        }
+      }
+    }
   },
   server: {
     headers: {
