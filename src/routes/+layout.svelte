@@ -7,6 +7,8 @@
   import '../app.css';
   import { darkMode } from '$lib/stores/settings.js';
   import { completedSlugs } from '$lib/stores/completed.js';
+  import * as Sheet from '$lib/components/ui/sheet/index.js';
+  import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
 
   let { data, children } = $props();
 
@@ -20,6 +22,8 @@
   let sidebarOpen = $state(true);
   let expandedChapters = $state(new Set());
   let sidebarInnerEl = $state(null);
+  let mobileNavOpen = $state(false);
+  const isNarrow = new IsMobile(980);
 
   function toggleChapter(title) {
     if (expandedChapters.has(title)) {
@@ -31,6 +35,7 @@
 
   function navigateTo(l) {
     const [part, name] = l.slug.split('/');
+    mobileNavOpen = false;
     goto(`${base}/lesson/${part}/${name}`);
   }
 
@@ -38,6 +43,14 @@
     const nextIndex = lessonIndex + delta;
     if (nextIndex < 0 || nextIndex >= data.lessons.length) return;
     navigateTo(data.lessons[nextIndex]);
+  }
+
+  function handleSidebarToggle() {
+    if (isNarrow.current) {
+      mobileNavOpen = !mobileNavOpen;
+    } else {
+      sidebarOpen = !sidebarOpen;
+    }
   }
 
   // Apply dark mode class on <html>
@@ -56,7 +69,7 @@
     });
   });
 
-  // Auto-scroll active sidebar item into view
+  // Auto-scroll active sidebar item into view (desktop)
   $effect(() => {
     lessonIndex;
     sidebarInnerEl?.querySelector('[data-active="true"]')?.scrollIntoView({ block: 'nearest' });
@@ -72,6 +85,41 @@
     }
   });
 </script>
+
+{#snippet navItems()}
+  {#each data.parts as part, pi}
+    {#if pi > 0}<div class="border-t border-border mx-1 my-2"></div>{/if}
+    <div class="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground px-2 py-[0.3rem] mt-1 select-none">
+      {part.title}
+    </div>
+    {#each part.chapters as chapter}
+      <button
+        class="w-full flex items-center justify-between px-2 py-[0.28rem] rounded-[7px] transition-colors hover:bg-surface-2 text-left mt-[0.15rem]"
+        onclick={() => toggleChapter(chapter.title)}
+      >
+        <span class="text-[0.71rem] text-muted-foreground italic">{chapter.title}</span>
+        <span class="text-[0.6rem] text-muted-foreground opacity-60 ml-1 flex-shrink-0">
+          {expandedChapters.has(chapter.title) ? '▾' : '▸'}
+        </span>
+      </button>
+      {#if expandedChapters.has(chapter.title)}
+        {#each chapter.lessons as item}
+          {@const idx = data.lessons.findIndex(l => l.slug === item.slug)}
+          <button
+            class="w-full text-left text-[0.79rem] pl-[1.1rem] pr-2 py-[0.22rem] rounded-[7px] transition-colors leading-snug flex items-center gap-1 {idx === lessonIndex ? 'bg-tab-selected-bg text-teal font-medium' : 'text-foreground hover:bg-surface-2'}"
+            data-active={idx === lessonIndex}
+            onclick={() => navigateTo(item)}
+          >
+            <span class="flex-1 truncate">{idx + 1}. {item.title}</span>
+            {#if $completedSlugs.has(item.slug)}
+              <span class="text-teal flex-shrink-0 ml-1">✓</span>
+            {/if}
+          </button>
+        {/each}
+      {/if}
+    {/each}
+  {/each}
+{/snippet}
 
 <main class="h-dvh p-3 flex flex-col gap-[0.7rem] font-sans overflow-hidden max-narrow:p-0 max-narrow:gap-0">
   <header class="bg-surface border border-border rounded-[14px] shadow-app flex flex-col max-narrow:rounded-none max-narrow:border-x-0 max-narrow:border-t-0">
@@ -126,12 +174,12 @@
     <!-- Row 2: navigation -->
     <div class="flex items-center gap-2 px-3 py-[0.35rem] border-t border-border">
       <button
-        onclick={() => (sidebarOpen = !sidebarOpen)}
+        onclick={handleSidebarToggle}
         class="flex items-center justify-center w-7 h-7 rounded-[7px] hover:bg-surface-2 transition-colors text-muted-foreground flex-shrink-0"
-        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-        title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+        aria-label={sidebarOpen || mobileNavOpen ? 'Close sidebar' : 'Open sidebar'}
+        title={sidebarOpen || mobileNavOpen ? 'Close sidebar' : 'Open sidebar'}
       >
-        {#if sidebarOpen}
+        {#if sidebarOpen && !isNarrow.current}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="m15 9-3 3 3 3"/>
           </svg>
@@ -162,47 +210,29 @@
   </header>
 
   <div class="flex-1 min-h-0 flex">
-    <!-- Lesson sidebar -->
+    <!-- Desktop sidebar (hidden in narrow/mobile mode) -->
     <nav
-      class="overflow-hidden bg-surface border border-border rounded-[14px] shadow-app flex-shrink-0 min-h-0"
+      class="overflow-hidden bg-surface border border-border rounded-[14px] shadow-app flex-shrink-0 min-h-0 max-narrow:hidden"
       style="width: {sidebarOpen ? '220px' : '0'}; margin-right: {sidebarOpen ? '0.7rem' : '0'}; opacity: {sidebarOpen ? '1' : '0'}; border-width: {sidebarOpen ? '1px' : '0'}; transition: width 0.2s ease, margin-right 0.2s ease, opacity 0.15s ease"
     >
       <div bind:this={sidebarInnerEl} class="w-[220px] h-full overflow-y-auto p-2 flex flex-col">
-        {#each data.parts as part, pi}
-          {#if pi > 0}<div class="border-t border-border mx-1 my-2"></div>{/if}
-          <div class="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground px-2 py-[0.3rem] mt-1 select-none">
-            {part.title}
-          </div>
-          {#each part.chapters as chapter}
-            <button
-              class="w-full flex items-center justify-between px-2 py-[0.28rem] rounded-[7px] transition-colors hover:bg-surface-2 text-left mt-[0.15rem]"
-              onclick={() => toggleChapter(chapter.title)}
-            >
-              <span class="text-[0.71rem] text-muted-foreground italic">{chapter.title}</span>
-              <span class="text-[0.6rem] text-muted-foreground opacity-60 ml-1 flex-shrink-0">
-                {expandedChapters.has(chapter.title) ? '▾' : '▸'}
-              </span>
-            </button>
-            {#if expandedChapters.has(chapter.title)}
-              {#each chapter.lessons as item}
-                {@const idx = data.lessons.findIndex(l => l.slug === item.slug)}
-                <button
-                  class="w-full text-left text-[0.79rem] pl-[1.1rem] pr-2 py-[0.22rem] rounded-[7px] transition-colors leading-snug flex items-center gap-1 {idx === lessonIndex ? 'bg-tab-selected-bg text-teal font-medium' : 'text-foreground hover:bg-surface-2'}"
-                  data-active={idx === lessonIndex}
-                  onclick={() => navigateTo(item)}
-                >
-                  <span class="flex-1 truncate">{idx + 1}. {item.title}</span>
-                  {#if $completedSlugs.has(item.slug)}
-                    <span class="text-teal flex-shrink-0 ml-1">✓</span>
-                  {/if}
-                </button>
-              {/each}
-            {/if}
-          {/each}
-        {/each}
+        {@render navItems()}
       </div>
     </nav>
 
     {@render children()}
   </div>
 </main>
+
+<!-- Mobile nav drawer (overlay, narrow mode only) -->
+<Sheet.Root bind:open={mobileNavOpen}>
+  <Sheet.Content side="left" class="bg-surface border-border p-0 w-[260px]">
+    <Sheet.Header class="sr-only">
+      <Sheet.Title>Lesson Navigation</Sheet.Title>
+      <Sheet.Description>Browse and navigate between lessons</Sheet.Description>
+    </Sheet.Header>
+    <div class="h-full overflow-y-auto pt-10 p-2 flex flex-col">
+      {@render navItems()}
+    </div>
+  </Sheet.Content>
+</Sheet.Root>
