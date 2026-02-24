@@ -12,8 +12,16 @@
   let hSplit = 33;  // lesson pane % of main section width
   let vSplit = 65;  // editor pane % of lab section height
 
-  let lessonIndex = 0;
-  let lesson = lessons[0];
+  // Initialise from the ?lesson=N URL param synchronously so the reactive URL
+  // updater (which runs before onMount) sees the correct index from the start
+  // and does not strip the query param before onMount can read it.
+  function _parseLessonParam() {
+    if (typeof window === 'undefined') return 0;
+    const n = Number(new URLSearchParams(window.location.search).get('lesson'));
+    return (Number.isFinite(n) && n >= 1 && n <= lessons.length) ? n - 1 : 0;
+  }
+  let lessonIndex = _parseLessonParam();
+  let lesson = lessons[lessonIndex];
   let starterFiles = cloneFiles(lesson.files.a);
   let solutionFiles = mergeFiles(starterFiles, lesson.files.b);
 
@@ -35,7 +43,7 @@
   let showOptions = false;
   let completedSlugs = new Set();
   let sidebarOpen = true;
-  let expandedChapters = new Set([lessons[0].chapterTitle]);
+  let expandedChapters = new Set([lessons[lessonIndex].chapterTitle]);
   let sidebarInnerEl;
   let copyEnabled = false;
   let showCopyModal = false;
@@ -277,6 +285,20 @@
         ...logs.slice(existingIndex + 1)
       ]);
       return;
+    }
+
+    // Always place stdout before stderr: if adding stdout and stderr already exists,
+    // insert the new stdout entry immediately before the first stderr entry.
+    if (isStdout) {
+      const stderrIndex = logs.findIndex(isStderrEntry);
+      if (stderrIndex >= 0) {
+        logs = trimLogEntries([
+          ...logs.slice(0, stderrIndex),
+          `${prefix}${trimStreamPayload(payload)}`,
+          ...logs.slice(stderrIndex),
+        ]);
+        return;
+      }
     }
 
     logs = trimLogEntries([...logs, `${prefix}${trimStreamPayload(payload)}`]);

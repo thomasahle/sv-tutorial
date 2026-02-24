@@ -1376,6 +1376,17 @@ self.onmessage = async function(event) {
       printErr: function(line) { onLog('[sim] ' + line); },
       locateFile: function(path) { return path.endsWith('.wasm') ? simWasmUrl : path; },
       instantiateWasm: function(imports, callback) {
+        // Wrap _circt_vpi_wasm_yield (import 'r') with Asyncify.handleAsync so
+        // WASM calls to the yield import trigger Asyncify unwind/rewind instead
+        // of running synchronously (instrumentWasmImports is never called by the
+        // compiled artifact's createWasm(), so we must wrap here ourselves).
+        if (typeof Asyncify !== 'undefined' && imports && imports.a && typeof imports.a.r === 'function') {
+          var _origYield = imports.a.r;
+          imports.a.r = function() {
+            var _args = arguments;
+            return Asyncify.handleAsync(function() { return _origYield.apply(null, _args); });
+          };
+        }
         WebAssembly.instantiateStreaming(fetch(simWasmUrl), imports)
           .then(function(r) { callback(r.instance, r.module); })
           .catch(function() {
@@ -1520,6 +1531,9 @@ self.onmessage = async function(event) {
       try { simModule.FS.mkdir('/workspace/out'); } catch(_) {}
       simModule.FS.writeFile(mlirPath, mlir, { encoding: 'utf8' });
     }
+
+    // Debug: print MLIR content (first 2000 chars)
+    onLog('[cocotb] MLIR (first 2000 chars): ' + mlir.slice(0, 2000));
 
     // ── 3. Load Pyodide ───────────────────────────────────────────────────────
     onLog('[cocotb] Loading Pyodide...');
@@ -1710,11 +1724,31 @@ self.onmessage = async function(event) {
     self.circtSimVpiYieldHook = async function(cbFuncPtr, cbDataPtr) {
       var reason    = simModule.getValue(cbDataPtr +  0, 'i32');
       var triggerId = simModule.getValue(cbDataPtr + 24, 'i32');
+      onLog('[cocotb] yield hook: reason=' + reason + ' cbFuncPtr=' + cbFuncPtr + ' triggerId=' + triggerId);
 
       if (reason === VPI.cbStartOfSimulation) {
-        pyodide.runPython('_start_tests_sync()');
+        onLog('[cocotb] cbStartOfSimulation fired — starting tests');
+        // Debug: check VPI signal handles
+        try {
+          var _dnames = ['A', 'B', 'X', 'adder.A', 'adder.B', 'adder.X'];
+          for (var _dn = 0; _dn < _dnames.length; _dn++) {
+            var _dnp = wsWriteString(simModule, _dnames[_dn]);
+            var _dh = simModule._vpi_handle_by_name ? (simModule._vpi_handle_by_name(_dnp, 0)|0) : -1;
+            simModule._free(_dnp);
+            onLog('[cocotb] vpi_handle("' + _dnames[_dn] + '")=' + _dh);
+          }
+        } catch(_de) { onLog('[cocotb] vpi_handle debug error: ' + _de); }
+        try { pyodide.runPython('_start_tests_sync()'); } catch(e) { onLog('[cocotb] _start_tests_sync error: ' + e); }
+        onLog('[cocotb] _start_tests_sync returned, pendingRegs=' + _pendingRegistrations.length);
+        try { onLog('[cocotb] ntests=' + pyodide.runPython('len(_tests)')); } catch(e) { onLog('[cocotb] ntests error: ' + e); }
         for (var i = 0; i < 50; i++) {
-          await pyodide.runPythonAsync('await __import__("asyncio").sleep(0)');
+          try {
+            await pyodide.runPythonAsync('await __import__("asyncio").sleep(0)');
+          } catch(e) {
+            onLog('[cocotb] runPythonAsync error at i=' + i + ': ' + e);
+            break;
+          }
+          onLog('[cocotb] sleep ' + i + ' done, pendingRegs=' + _pendingRegistrations.length + ' testsDone=' + _testsDone);
           if (_pendingRegistrations.length > 0 || _testsDone) break;
         }
       } else if (reason !== VPI.cbEndOfSimulation) {

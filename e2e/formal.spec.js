@@ -1,10 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 // Helper: expand a chapter in the sidebar and click a lesson.
+// Lesson buttons carry data-active; chapter buttons do not — this distinction
+// prevents strict-mode violations from partial name matches.
 async function goToLesson(page, chapterName, lessonName) {
   await page.goto('/');
-  await page.getByRole('button', { name: chapterName }).click();
-  await page.getByRole('button', { name: lessonName }).click();
+  const lessonBtn = page.locator('button[data-active]').filter({ hasText: lessonName });
+  if ((await lessonBtn.count()) === 0) {
+    await page.locator('button:not([data-active])').filter({ hasText: chapterName }).click();
+  }
+  await lessonBtn.click();
   await expect(page.getByRole('heading', { level: 2, name: lessonName })).toBeVisible();
 }
 

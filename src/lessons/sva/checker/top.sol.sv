@@ -1,9 +1,9 @@
-checker handshake_check(input logic clk, req, ack);
+module handshake_check(input logic clk, req, ack);
   property p;
     @(posedge clk) req |=> ##[1:3] ack;
   endproperty
   req_ack_a: assert property (p);
-endchecker
+endmodule
 
 module top(input logic clk,
            input logic req1, ack1,

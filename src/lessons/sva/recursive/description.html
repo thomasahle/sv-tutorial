@@ -1,7 +1,9 @@
-<p>Properties can accept <strong>formal parameters</strong> — just like modules accept ports — so you can write generic, reusable property templates. A <strong>recursive property</strong> takes this one step further by referring to itself in its own body, creating a self-referential temporal statement. Recursive properties must use the non-overlapping implication <code>|=&gt;</code> (never <code>|-&gt;</code>) to avoid zero-time loops:</p>
-<pre>property p_hold(logic sig, logic release_cond);
-  @(posedge clk) sig && !release_cond |=> p_hold(sig, release_cond);
+<p>A <strong>recursive property</strong> refers to itself in its own consequent, creating a self-referential temporal statement that unrolls indefinitely:</p>
+<pre>property p_lock_hold;
+  @(posedge clk) lock && !unlock |=> p_lock_hold;
 endproperty</pre>
-<p>This reads: "if <code>sig</code> is high and <code>release_cond</code> is not, then one cycle later the same condition must hold again." The recursion unrolls until <code>release_cond</code> becomes true.</p>
-<p>Open <code>lock_check.sv</code> and complete the recursive property that asserts <code>lock</code> stays high until <code>unlock</code> is asserted.</p>
-<blockquote><p>Recursive properties can only appear as the <em>consequent</em> of an implication — never on the antecedent side. They are powerful for expressing "hold until" invariants without needing to know the bound in advance, and formal tools can often prove them by induction.</p></blockquote>
+<p>This reads: "if <code>lock</code> is high and <code>unlock</code> has not fired, one cycle later the same condition must hold again — forever, until <code>unlock</code> fires." Recursive properties must use <code>|=&gt;</code> (never <code>|-&gt;</code>) to avoid a zero-time loop, and the recursive call must appear as the <em>consequent</em>, never the antecedent.</p>
+<p>The WASM tool does not yet support recursive property calls. This exercise uses the equivalent one-step form that BMC can verify directly:</p>
+<pre>lock && !unlock |=> lock</pre>
+<p>This says "if <code>lock</code> is high and <code>unlock</code> has not fired, <code>lock</code> must be high on the next cycle." BMC checks this for every cycle up to its bound — which is equivalent to the recursive version within any finite trace. Open <code>lock_check.sv</code> and complete the property.</p>
+<blockquote><p>Full formal tools prove recursive properties by induction: they show (a) the property holds at step 0, and (b) if it holds at step k, it holds at step k+1. This gives an unbounded proof without requiring an unbounded bound.</p></blockquote>

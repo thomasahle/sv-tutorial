@@ -1,13 +1,14 @@
 module lock_check(input logic clk, lock, unlock);
 
-  // Recursive property: if lock is high and unlock hasn't fired,
-  // lock must still be high at the next clock edge.
-  property p_lock_hold(logic lk, logic ul);
+  // One-step version of the recursive "lock holds until unlock" invariant:
+  // if lock is high and unlock has not fired, lock must still be high
+  // at the very next clock edge.
+  property p_lock_hold;
     @(posedge clk)
-      // TODO: lk && !ul |=> p_lock_hold(lk, ul);
+      // TODO: lock && !unlock |=> lock;
       ;
   endproperty
 
-  lock_hold_a: assert property (p_lock_hold(lock, unlock));
+  lock_hold_a: assert property (p_lock_hold);
 
 endmodule

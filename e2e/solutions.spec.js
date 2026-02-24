@@ -35,11 +35,23 @@ async function goToLesson(page, chapterName, lessonName) {
       if (key.startsWith('svt:')) localStorage.removeItem(key);
     }
   });
-  await page.getByRole('button', { name: chapterName }).click();
-  // Use a plain string (not RegExp) so lesson names with regex-special chars
-  // like ##[m:n], $rose, [*m] are matched literally.  Playwright's name:
-  // option already does case-insensitive partial matching by default.
-  await page.getByRole('button', { name: lessonName }).click();
+
+  // Lesson buttons carry a data-active attribute; chapter buttons do not.
+  // Using this selector avoids strict-mode violations when a chapter title
+  // partially matches a lesson name (e.g. "Core Sequences" vs "Sequences")
+  // or when a chapter and lesson share the same name ("Functional Coverage").
+  const lessonBtn = page.locator('button[data-active]').filter({ hasText: lessonName });
+
+  // The Introduction chapter is expanded by default (lesson 0).  Clicking its
+  // chapter button would toggle it closed and hide the Welcome button.  So we
+  // only click the chapter button when the lesson button is not yet in the DOM.
+  if ((await lessonBtn.count()) === 0) {
+    // Target only chapter buttons (no data-active) to avoid partial-name
+    // collisions between chapter and lesson button text.
+    await page.locator('button:not([data-active])').filter({ hasText: chapterName }).click();
+  }
+
+  await lessonBtn.click();
   await expect(page.getByRole('heading', { level: 2, name: lessonName })).toBeVisible();
 }
 

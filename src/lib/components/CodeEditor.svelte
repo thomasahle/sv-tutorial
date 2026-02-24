@@ -56,7 +56,7 @@
   const themeCompartment = new Compartment();
   const highlightCompartment = new Compartment();
   const vimCompartment = new Compartment();
-  const VIM_MODULE_SPEC = '@codemirror/vim';
+  const VIM_MODULE_SPEC = '@replit/codemirror-vim';
 
   // Setup — runs once. untrack(value) avoids re-creating editor on every keystroke.
   $effect(() => {
@@ -67,7 +67,7 @@
     let vimExtension = [];
     const setupVim = async () => {
       try {
-        const { vim } = await import(/* @vite-ignore */ VIM_MODULE_SPEC);
+        const { vim } = await import(VIM_MODULE_SPEC);
         if (initialVimMode) vimExtension = vim();
       } catch {}
     };
@@ -135,7 +135,7 @@
       let ext = [];
       if (enableVim) {
         try {
-          const { vim } = await import(/* @vite-ignore */ VIM_MODULE_SPEC);
+          const { vim } = await import(VIM_MODULE_SPEC);
           ext = vim();
         } catch {}
       }

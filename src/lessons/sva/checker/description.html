@@ -11,5 +11,5 @@ module top(input logic clk, req1, ack1, req2, ack2);
   handshake_check c1(clk, req1, ack1);
   handshake_check c2(clk, req2, ack2);
 endmodule</pre>
-<p>Open <code>top.sv</code> and complete the property inside the <code>handshake_check</code> checker.</p>
+<p>The WASM tool does not yet lower the <code>checker</code>/<code>endchecker</code> keywords, so this exercise uses a regular <code>module</code> instead — the semantics are identical for verification purposes. Open <code>top.sv</code> and complete the property inside <code>handshake_check</code>.</p>
 <blockquote><p>Checkers can also accept <code>sequence</code>, <code>property</code>, and <code>event</code> typed formal arguments, making them fully parameterisable assertion bundles — the SVA equivalent of generic verification IP.</p></blockquote>

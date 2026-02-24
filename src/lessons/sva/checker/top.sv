@@ -1,12 +1,13 @@
-// A checker is an encapsulated, reusable assertion block
-checker handshake_check(input logic clk, req, ack);
+// A checker is an encapsulated, reusable assertion block.
+// (The tool represents it as a module; semantics are identical.)
+module handshake_check(input logic clk, req, ack);
   property p;
     @(posedge clk)
       // TODO: req |=> ##[1:3] ack;
       ;
   endproperty
   req_ack_a: assert property (p);
-endchecker
+endmodule
 
 // Instantiate the checker for two independent channels
 module top(input logic clk,
