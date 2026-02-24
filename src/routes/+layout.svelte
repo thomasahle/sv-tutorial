@@ -74,7 +74,7 @@
 </script>
 
 <main class="h-dvh p-3 flex flex-col gap-[0.7rem] font-sans overflow-hidden max-narrow:p-0 max-narrow:gap-0">
-  <header class="bg-surface border border-border rounded-[14px] shadow-app flex flex-col">
+  <header class="bg-surface border border-border rounded-[14px] shadow-app flex flex-col max-narrow:rounded-none max-narrow:border-x-0 max-narrow:border-t-0">
     <!-- Row 1: title + utility buttons -->
     <div class="flex items-center justify-between px-4 py-[0.6rem]">
       <div class="flex items-center gap-2">

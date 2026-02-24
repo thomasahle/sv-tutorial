@@ -436,7 +436,7 @@
 
 <section class="flex-1 min-h-0 flex max-narrow:flex-col">
   <article bind:this={lessonArticleEl} style="flex: 0 0 {hSplit}%; min-width: 200px"
-           class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 flex flex-col p-[0.9rem] gap-3 overflow-y-auto [scrollbar-gutter:stable]">
+           class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 flex flex-col p-[0.9rem] gap-3 overflow-y-auto [scrollbar-gutter:stable] max-narrow:rounded-t-none max-narrow:border-x-0 max-narrow:border-t-0">
     <h2 data-testid="lesson-title" class="m-0 text-[1.15rem] font-bold leading-tight text-foreground">{lesson.title}</h2>
     <div class="lesson-body">
       {@html lesson.html}
