@@ -19,6 +19,7 @@ jobs:
       CIRCT_WASM_CONFIGURE_TIMEOUT_MIN: "45"
       CIRCT_WASM_BUILD_TIMEOUT_MIN: "150"
       CIRCT_WASM_CLEAN_BUILD: "1"
+      GH_TOKEN: ${{ secrets.CIRCT_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,8 +66,6 @@ jobs:
 
       - name: Configure git credentials for private CIRCT fork
         run: gh auth setup-git
-        env:
-          GH_TOKEN: ${{ secrets.CIRCT_TOKEN }}
 
       - name: Setup pinned CIRCT checkout
         run: scripts/setup-circt.sh
