@@ -6,4 +6,6 @@
   else        q &lt;= d;
 end</pre>
               <blockquote><p>Active-low reset (<code>rst_n</code>) is conventional in RTL: the signal name ends in <code>_n</code> and asserts at 0.</p></blockquote>
-              <blockquote><p>After clicking <strong>Run</strong>, open the <strong>Waves</strong> tab to see <code>clk</code>, <code>rst_n</code>, <code>d</code>, and <code>q</code> plotted over time. You should see <code>q</code> follow <code>d</code> one cycle later once reset is released.</p></blockquote>
+              <h2>Testbench</h2>
+              <p>The clock is generated with a free-running toggle: <code>always #5 clk = ~clk;</code> (period = 10 time units). The testbench uses <code>@(posedge clk); #1;</code> to wait for a rising edge and then sample outputs one unit later — after the flip-flop has settled but before the next edge.</p>
+              <p>The three test steps check reset, clocking in a 1, and clocking in a 0. Open the <strong>Waves</strong> tab after running to see <code>clk</code>, <code>rst_n</code>, <code>d</code>, and <code>q</code> plotted over time — <code>q</code> should follow <code>d</code> exactly one cycle after reset is released.</p>

@@ -1,5 +1,5 @@
 {
   "title": "Sequences and Properties",
-  "waveform": "required",
-  "focus": "/src/grant_check.sv"
+  "focus": "/src/grant_check.sv",
+  "runner": "bmc"
 }

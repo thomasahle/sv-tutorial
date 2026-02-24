@@ -1,5 +1,4 @@
 {
   "title": "Cross coverage",
-  "waveform": "optional",
   "focus": "/src/cov_cross.sv"
 }

@@ -91,6 +91,36 @@
     --radius:               0.625rem;
   }
 
+  html.dark {
+    --color-bg:        #1b1f1e;
+    --color-bg-accent: #141918;
+    --color-surface:   #232928;
+    --color-surface-2: #2d3532;
+    --color-ink:       #dde8e3;
+    --color-teal:      #3db5b9;
+    --color-tab-selected-bg: #1a3535;
+    --color-editor-bg:  #1e2422;
+    --color-editor-text: #d4e8e0;
+
+    --background:           35 41 40;
+    --foreground:           221 232 227;
+    --card:                 35 41 40;
+    --card-foreground:      221 232 227;
+    --primary:              61 181 185;
+    --primary-foreground:   27 31 30;
+    --secondary:            45 53 50;
+    --secondary-foreground: 221 232 227;
+    --muted:                45 53 50;
+    --muted-foreground:     140 165 158;
+    --accent:               45 53 50;
+    --accent-foreground:    221 232 227;
+    --destructive:          180 70 70;
+    --destructive-foreground: 221 232 227;
+    --border:               56 69 67;
+    --input:                56 69 67;
+    --ring:                 61 181 185;
+  }
+
   body {
     margin: 0;
     font-family: var(--font-sans);
@@ -98,6 +128,13 @@
     background:
       radial-gradient(circle at 15% 10%, #fff5d6 0%, transparent 30%),
       radial-gradient(circle at 90% 90%, #d8eee8 0%, transparent 35%),
+      linear-gradient(180deg, var(--color-bg), var(--color-bg-accent));
+  }
+
+  html.dark body {
+    background:
+      radial-gradient(circle at 15% 10%, #1f2e2b 0%, transparent 30%),
+      radial-gradient(circle at 90% 90%, #131e21 0%, transparent 35%),
       linear-gradient(180deg, var(--color-bg), var(--color-bg-accent));
   }
 

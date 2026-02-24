@@ -2,6 +2,8 @@
 <p><strong>Part 1 — SystemVerilog Basics</strong> covers the building blocks of synthesisable RTL: modules and ports, combinational logic with <code>always_comb</code>, sequential logic with <code>always_ff</code>, parameterized modules, state machines, and coverage fundamentals.</p>
 <p><strong>Part 2 — SystemVerilog Assertions</strong> covers formal and simulation-based verification: immediate and concurrent assertions, clock-delay sequences, implication operators, sampled-value functions, and advanced property techniques.</p>
 <p><strong>Part 3 — Universal Verification Methodology</strong> covers the industry-standard verification framework: UVM components, testbench architecture, sequences, drivers, monitors, scoreboards, and environments.</p>
-<blockquote><p>Prior experience with digital logic (flip-flops, gates, clocks) is assumed. Experience with another HDL is helpful but not required.</p></blockquote>
+<hr style="margin: 1em 0;">
+<h3>Hello World</h3>
 <p>Every SystemVerilog program is wrapped in a <code>module</code>. An <code>initial</code> block runs once at time zero. Add a <code>$display</code> call to print a message, then press <strong>⌘ Enter</strong> to run it.</p>
-<pre>$display("hello, world");</pre>
+<pre>$display("HELLO WORLD");</pre>
+<p>After running, the terminal shows diagnostic lines from the simulator alongside your output. The <code>[circt-sim]</code> lines are internal bookkeeping — process counts, timing, coverage — and can be ignored for now. Your program's output appears in between, unadorned: that's the line you printed.</p>

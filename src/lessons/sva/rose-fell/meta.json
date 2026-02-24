@@ -1,5 +1,5 @@
 {
   "title": "$rose and $fell",
-  "waveform": "required",
-  "focus": "/src/edge_check.sv"
+  "focus": "/src/edge_check.sv",
+  "runner": "bmc"
 }

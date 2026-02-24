@@ -1,7 +1,9 @@
-<p>A single coverpoint can look perfect while interactions between signals are still untested. <strong>Cross coverage</strong> tracks combinations.</p>
-<p>Define two coverpoints, then cross them:</p>
-<pre>cp_op:   coverpoint op;
-cp_mode: coverpoint mode;
-op_x_mode: cross cp_op, cp_mode;</pre>
-<p>Open <code>cov_cross.sv</code> and add the missing cross definition so operation × mode combinations are measured.</p>
-<blockquote><p>Crosses can explode combinatorially. Cross only the dimensions that represent meaningful risk.</p></blockquote>
+<p>Two coverpoints can each report 100% while an entire class of interactions is never tested. Consider a design that supports 4 operations in 2 modes: even if every operation is exercised and both modes are exercised, you may have only ever run operations in <em>user</em> mode and never in <em>kernel</em> mode.</p>
+<p><strong>Cross coverage</strong> tracks combinations. Crossing two coverpoints with <em>m</em> and <em>n</em> bins produces <em>m × n</em> cross-bins — one for every pair:</p>
+<pre>cp_op:   coverpoint op   { bins add={0}; bins sub={1}; bins mul={2}; bins div={3}; }
+cp_mode: coverpoint mode { bins user={0}; bins kernel={1}; }
+op_x_mode: cross cp_op, cp_mode;  // 4 × 2 = 8 cross-bins</pre>
+<p>Open <code>cov_cross.sv</code> and add the cross definition.</p>
+<p>Look at what the testbench does: <code>op</code> increments every cycle while <code>mode</code> alternates each cycle, so they stay in sync — even-numbered ops always pair with <code>user</code> mode, odd-numbered ops with <code>kernel</code> mode. After the run you will see the individual coverpoints both hit 100%, but the cross only reaches <strong>50%</strong> — four of the eight combinations are never exercised.</p>
+<p>To reach 100% cross coverage the testbench would need to vary <code>op</code> and <code>mode</code> independently, for example by holding <code>mode=0</code> and cycling all four ops, then repeating with <code>mode=1</code>.</p>
+<blockquote><p>This is the central lesson of cross coverage: perfect scores on individual coverpoints can hide large gaps. Cross coverage is especially valuable for opcode × privilege level, command × bus width, or any other pair of orthogonal protocol dimensions.</p></blockquote>

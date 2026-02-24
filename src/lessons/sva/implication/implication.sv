@@ -1,4 +1,4 @@
-module implication_demo(input logic clk, req, ack);
+module implication(input logic clk, req, ack);
 
   // Overlapping: ack must be high THE SAME cycle req is high
   property p_ol;

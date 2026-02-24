@@ -1,5 +1,4 @@
 {
   "title": "Monitor and Scoreboard",
-  "waveform": "optional",
   "focus": "/src/adder_scoreboard.sv"
 }

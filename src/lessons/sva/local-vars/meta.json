@@ -1,5 +1,5 @@
 {
   "title": "Local Variables in Sequences",
-  "waveform": "required",
-  "focus": "/src/pipeline_check.sv"
+  "focus": "/src/pipeline_check.sv",
+  "runner": "bmc"
 }

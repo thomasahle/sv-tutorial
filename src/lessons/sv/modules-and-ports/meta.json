@@ -1,5 +1,4 @@
 {
   "title": "Modules and Ports",
-  "waveform": "optional",
   "focus": "/src/adder.sv"
 }

@@ -5,8 +5,9 @@
   <li><code>s1 intersect s2</code> — both must match <em>and</em> end at exactly the same cycle</li>
   <li><code>s1 within s2</code> — <code>s1</code> starts and ends entirely inside <code>s2</code>'s window</li>
 </ul>
-<p><code>intersect</code> is the most useful for bus protocols: it checks that two independent conditions hold simultaneously for the same duration:</p>
-<pre>valid |-> (valid[*4]) intersect (ready[*4])</pre>
-<p>This says: if <code>valid</code> is high, then both <code>valid</code> and <code>ready</code> must stay high for exactly 4 consecutive cycles — they must be in lock-step.</p>
-<p>Open <code>bus_check.sv</code> and complete the property using <code>intersect</code>.</p>
-<blockquote><p>Use <code>and</code> when two conditions must both eventually be satisfied but may take different amounts of time. Use <code>intersect</code> when they must finish together — common for data/valid or valid/ready handshake verification.</p></blockquote>
+<p>Open <code>bus_check.sv</code> and complete two properties:</p>
+<ol>
+  <li><strong>p_transfer</strong> using <code>intersect</code>: once <code>valid</code> is asserted, both <code>valid</code> and <code>ready</code> must hold high for exactly 4 consecutive cycles in lock-step.</li>
+  <li><strong>p_complete</strong> using <code>and</code>: after <code>valid</code>, <code>ready</code> must arrive within 4 cycles <em>and</em> <code>done</code> must arrive within 8 cycles — checked independently, they may complete at different times.</li>
+</ol>
+<blockquote><p>The key difference: <code>intersect</code> requires both subsequences to end at the same cycle; <code>and</code> ends when the <em>longer</em> of the two completes. Use <code>intersect</code> for simultaneous lock-step protocols; use <code>and</code> when two independent conditions must both eventually be satisfied.</p></blockquote>

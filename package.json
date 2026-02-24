@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "check:req": "./scripts/check-requirements.sh",
+    "check:req:wasm": "./scripts/check-requirements.sh --with-wasm",
+    "setup:circt": "./scripts/setup-circt.sh",
+    "build:circt": "./scripts/build-circt-wasm.sh",
+    "bootstrap:repro": "./scripts/bootstrap-repro.sh",
     "sync:circt": "./scripts/sync-circt-wasm.sh",
+    "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -28,6 +34,7 @@
     "@playwright/test": "^1.58.2",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "coi-serviceworker": "^0.1.7",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.0.18"
   }
 }

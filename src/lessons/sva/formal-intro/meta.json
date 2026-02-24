@@ -1,6 +1,5 @@
 {
   "title": "Bounded Model Checking",
-  "waveform": "optional",
   "focus": "/src/top.sv",
-  "runner": "both"
+  "runner": "bmc"
 }

@@ -1,10 +1,11 @@
+              <p>In the previous chapter you ran concurrent assertions with a simulation testbench — the simulator exercised only the paths you drove. A <strong>model checker</strong> goes further: it exhaustively explores every possible input sequence up to a bounded depth, finding counterexamples without any testbench at all. The lessons from here on use CIRCT's bounded model checker (BMC).</p>
               <p>An <strong>immediate assertion</strong> is a non-temporal check that lives inside a procedural block. It fires the instant the simulator reaches it — no clock required.</p>
               <pre>assert (expression)
   pass_action;
 else
   fail_action;</pre>
               <p>If the expression is <code>0</code>, <code>x</code>, or <code>z</code>, the assertion <strong>fails</strong> and the <code>else</code> branch runs.</p>
-              <p>Open <code>checker.sv</code> and add two assertions inside the <code>always @(posedge clk)</code> block:</p>
+              <p>Open <code>fifo_checker.sv</code> and add two assertions inside the <code>always @(posedge clk)</code> block:</p>
               <ul>
                 <li>Never write when full: <code>assert (!wr_en || !full)</code></li>
                 <li>Never read when empty: <code>assert (!rd_en || !empty)</code></li>

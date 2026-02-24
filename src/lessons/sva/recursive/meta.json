@@ -1,4 +1,5 @@
 {
   "title": "Recursive Properties",
-  "focus": "/src/lock_check.sv"
+  "focus": "/src/lock_check.sv",
+  "runner": "bmc"
 }

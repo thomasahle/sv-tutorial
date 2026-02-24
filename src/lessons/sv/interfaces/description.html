@@ -12,3 +12,12 @@ endmodule</pre>
 modport slave (input  a, b, output sum, carry);</pre>
 <p>Open <code>adder_if.sv</code> and add the two <code>modport</code> lines.</p>
 <blockquote><p>In a UVM testbench the driver holds a <code>virtual adder_if</code> — a reference to the interface instance created in <code>tb_top</code>. The <code>virtual</code> keyword is what lets a class-based component (which has no ports) reach down into the actual signal wires.</p></blockquote>
+<h2>Testbench</h2>
+<p>The testbench instantiates the interface and passes it as the sole port to the DUT. Both sides then access signals through the interface handle:</p>
+<pre>adder_if bus(.clk(clk));
+adder    dut(.bus(bus));
+
+bus.a = 8'd200; bus.b = 8'd100;  // drive via interface
+@(posedge clk); #1;
+$display(...bus.sum, bus.carry);  // read via same handle</pre>
+<p>The second test adds 200 + 100 = 300, which overflows 8 bits (300 − 256 = 44) and asserts <code>carry</code>, confirming the <code>assign {bus.carry, bus.sum} = bus.a + bus.b;</code> concatenation works correctly.</p>

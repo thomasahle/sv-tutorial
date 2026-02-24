@@ -1,5 +1,4 @@
 {
   "title": "Interfaces and modport",
-  "waveform": "off",
   "focus": "/src/adder_if.sv"
 }

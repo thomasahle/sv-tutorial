@@ -3,5 +3,4 @@
             <p>Open <code>top.sv</code>. A 4-bit counter resets to <code>0</code> when <code>rst</code> is high. Add the assertion that proves this:</p>
             <pre>rst_clears: assert property (
 @(posedge clk) rst |=> (cnt == 0));</pre>
-            <p>Use <strong>run</strong> to simulate with the testbench (watch the counter count up and reset), then <strong>verify</strong> to have BMC prove the reset property holds for <em>every</em> possible input sequence.</p>
-            <blockquote><p>Simulation confirms behaviour on one specific trace. BMC proves (or disproves) a property on all traces up to the bound — a much stronger guarantee.</p></blockquote>
+            <p>Press <strong>verify</strong> to have BMC prove the reset property holds for <em>every</em> possible input sequence up to the bound.</p>

@@ -1,5 +1,5 @@
 {
   "title": "Immediate Assertions",
-  "waveform": "required",
-  "focus": "/src/checker.sv"
+  "focus": "/src/fifo_checker.sv",
+  "runner": "bmc"
 }

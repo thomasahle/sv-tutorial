@@ -1,5 +1,4 @@
 {
   "title": "The Driver",
-  "waveform": "optional",
   "focus": "/src/adder_driver.sv"
 }

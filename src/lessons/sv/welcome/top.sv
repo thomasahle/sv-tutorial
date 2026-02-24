@@ -1,5 +1,5 @@
 module top;
   initial begin
-    // TODO: $display("hello, world");
+    // TODO: $display("HELLO WORLD");
   end
 endmodule

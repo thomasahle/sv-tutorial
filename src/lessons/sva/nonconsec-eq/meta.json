@@ -1,4 +1,5 @@
 {
   "title": "Non-Consecutive Equal Repetition [=m]",
-  "focus": "/src/multi_ack2.sv"
+  "focus": "/src/multi_ack2.sv",
+  "runner": "bmc"
 }

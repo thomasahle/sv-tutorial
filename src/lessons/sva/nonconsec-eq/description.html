@@ -5,9 +5,9 @@
 </ul>
 <p>This matters when the signal that follows (<code>done</code>, <code>ready</code>, …) can arrive on the same cycle as the last match or several cycles after it:</p>
 <pre>// [->3]: done must be the cycle immediately after the 3rd ack
-req |=> ack[->3] ##1 done
+start |=> ack[->3] ##1 done
 
 // [=3]: done may arrive at any point on or after the 3rd ack
-req |=> ack[=3] ##[0:$] done</pre>
+start |=> ack[=3] ##[0:$] done</pre>
 <p>Open <code>multi_ack2.sv</code> and complete the property body using <code>ack[=3] ##[0:$] done</code>.</p>
 <blockquote><p>Use <code>[=m]</code> when the protocol says "exactly m pulses must occur before completion" but the completion signal has variable latency. Use <code>[->m]</code> when completion is defined as arriving one cycle after the final pulse.</p></blockquote>

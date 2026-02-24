@@ -5,3 +5,8 @@
   <li>Count up: when <code>en</code> is high, add 1 each cycle</li>
 </ul>
 <blockquote><p>Notice that <code>else if</code> naturally gives reset higher priority than enable — a common and intentional idiom in RTL.</p></blockquote>
+<h2>Testbench</h2>
+<p>The testbench verifies three behaviors in sequence: counting, holding (enable de-asserted), and resetting. After releasing reset with enable high it uses <code>repeat(5) @(posedge clk);</code> to advance exactly five cycles, then samples <code>count</code>:</p>
+<pre>repeat(5) @(posedge clk);
+#1 $display("after 5 cycles: %0d (expect 5)", count);</pre>
+<p>Open the <strong>Waves</strong> tab to see <code>count</code> increment each cycle, freeze when <code>en</code> goes low, and snap back to zero when <code>rst_n</code> asserts.</p>

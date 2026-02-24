@@ -2,5 +2,5 @@
               <p><code>cover property</code> resolves this ambiguity. Its pass action runs each time the property <em>succeeds</em>, confirming the antecedent was actually stimulated:</p>
               <pre>aP: assert property (p) else $display("FAIL");
 cP: cover  property (p)      $display("PASS");</pre>
-              <p>Open <code>bus_check.sv</code>. The property <code>ldpcheck</code> is already written. Add both the <code>assert property</code> and <code>cover property</code> statements.</p>
+              <p>Open <code>bus_check.sv</code>. It models a simple bus protocol: when <code>frame_</code> rises (transaction boundary), the <code>ldp_</code> strobe must fall (assert) within 1–2 cycles. The property <code>ldpcheck</code> is already written. Add both the <code>assert property</code> and <code>cover property</code> statements.</p>
               <blockquote><p>Always pair <code>assert</code> and <code>cover</code> on the same property. A simulation that sees no assertion failures but also no cover hits has told you almost nothing.</p></blockquote>

@@ -9,3 +9,8 @@
               <pre>localparam int MAX = (1 &lt;&lt; N) - 1;</pre>
               <p>Open <code>counter_n.sv</code>. Add <code>#(parameter int N = 8)</code> to the header, replace the hardcoded <code>[7:0]</code> with <code>[N-1:0]</code>, and add a <code>localparam MAX</code>.</p>
               <blockquote><p>Always use <code>localparam</code> for values derived from a parameter — it signals to readers that the constant is not an interface boundary and cannot be changed from outside the module.</p></blockquote>
+              <h2>Testbench</h2>
+              <p>The solution testbench instantiates the same module <em>twice</em> with different widths to show the power of parameterization:</p>
+              <pre>counter_n #(.N(4)) u4(.clk, .rst_n, .en, .count(cnt4));
+counter_n #(.N(8)) u8(.clk, .rst_n, .en, .count(cnt8));</pre>
+              <p>After 20 clock cycles the 4-bit counter wraps around at 16, landing at 4 (20 mod 16), while the 8-bit counter reaches 20. One RTL module, two independently configured instances.</p>

@@ -13,3 +13,5 @@ public/surfer/
 *.pdf
 .playwright-mcp/
 playwright-console.log
+playwright-report/
+test-results/

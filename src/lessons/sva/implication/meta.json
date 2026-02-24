@@ -1,5 +1,5 @@
 {
   "title": "Implication: |-> and |=>",
-  "waveform": "required",
-  "focus": "/src/implication.sv"
+  "focus": "/src/implication.sv",
+  "runner": "bmc"
 }

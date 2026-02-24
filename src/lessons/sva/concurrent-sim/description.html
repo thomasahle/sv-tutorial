@@ -1,0 +1,13 @@
+<p>Immediate assertions fire once when the simulator reaches them. <strong>Concurrent assertions</strong> are different: they are <em>always watching</em>, evaluated on every active clock edge for the entire simulation.</p>
+<p>A concurrent assertion lives outside any procedural block:</p>
+<pre>assert property (my_prop)
+  else $error("property violated!");
+cover property (my_prop);</pre>
+<p>Open <code>monitor.sv</code>. It declares the property <code>req_then_gnt</code>: whenever <code>req</code> is high, <code>gnt</code> must arrive within 1–3 cycles (using the <code>|&rarr;</code> implication and <code>##[1:3]</code> clock-delay range).</p>
+<p>Add two statements after the property declaration:</p>
+<ul>
+  <li><code>assert property (req_then_gnt)</code> with an <code>else $error(...)</code> — fires when gnt is late</li>
+  <li><code>cover property (req_then_gnt);</code> — counts how many times the property was exercised</li>
+</ul>
+<p>Click <strong>Run</strong>. The testbench drives three scenarios: a valid grant, a missing grant, and back-to-back requests. With the assertion in place the missing-grant scenario prints an error in the log.</p>
+<blockquote><p>Simulation covers only the paths your testbench drives. The next chapter replaces the testbench with a <strong>formal model checker</strong> that proves assertions hold for <em>every possible input sequence</em> — no testbench required.</p></blockquote>

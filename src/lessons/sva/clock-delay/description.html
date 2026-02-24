@@ -5,5 +5,5 @@
   <li><code>##[1:$]</code> — one or more cycles (<code>$</code> means unbounded)</li>
 </ul>
 <p>Open <code>delay_check.sv</code>. The spec is: <em>after a memory request (<code>mem_req</code>), the response (<code>mem_ack</code>) must arrive within 2 to 5 clock cycles.</em></p>
-<p>Complete the property body using <code>|-> ##[2:5]</code>.</p>
-<blockquote><p>If the bound is wrong the model checker will produce a counterexample. Open the <strong>Waves</strong> tab to see which cycle <code>mem_req</code> fired and how many cycles later <code>mem_ack</code> arrived — this makes it easy to spot off-by-one errors in the delay range.</p></blockquote>
+<p>Complete the property body using <code>|-> ##[2:5]</code>, then press <strong>verify</strong>.</p>
+<p>If the delay range is wrong, the model checker will produce a counterexample trace in the log showing exactly which cycle <code>mem_req</code> fired and how many cycles later <code>mem_ack</code> arrived — useful for spotting off-by-one errors.</p>

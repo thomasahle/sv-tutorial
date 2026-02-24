@@ -1,5 +1,5 @@
 module tb;
-  logic clk = 0, rst_n, data_ok;
+  logic clk = 0, rst_n;
   logic [7:0] data;
 
   xcheck dut(.clk(clk), .rst_n(rst_n), .data(data));

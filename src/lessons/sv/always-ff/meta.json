@@ -1,5 +1,4 @@
 {
   "title": "Flip-Flops with always_ff",
-  "waveform": "optional",
   "focus": "/src/dff.sv"
 }

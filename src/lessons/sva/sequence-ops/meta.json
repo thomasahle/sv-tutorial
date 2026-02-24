@@ -1,4 +1,5 @@
 {
   "title": "Sequence Composition: intersect, within, and, or",
-  "focus": "/src/bus_check.sv"
+  "focus": "/src/bus_check.sv",
+  "runner": "bmc"
 }

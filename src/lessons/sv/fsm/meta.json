@@ -1,5 +1,4 @@
 {
   "title": "Two-Always Moore FSM",
-  "waveform": "optional",
   "focus": "/src/seq_det.sv"
 }

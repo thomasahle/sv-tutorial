@@ -1,7 +1,11 @@
-<p><strong>Functional coverage</strong> answers a different question than assertions: not "did something illegal happen?" but "did we hit the scenarios we care about?".</p>
-<p>A <code>covergroup</code> defines what to measure, and a <code>coverpoint</code> tracks sampled values:</p>
-<pre>covergroup cg @(posedge clk);
-  coverpoint opcode;
-endgroup</pre>
-<p>Open <code>cov_intro.sv</code> and add the missing <code>coverpoint</code> line for <code>opcode</code>.</p>
-<blockquote><p>Coverage is only meaningful if the testbench drives interesting stimulus. A 100% score on weak stimulus can still miss real bugs.</p></blockquote>
+<p><strong>Functional coverage</strong> answers a different question than assertions: not "did something illegal happen?" but "did we actually exercise the scenarios we care about?"</p>
+<p>A <code>covergroup</code> defines what to measure. A <code>coverpoint</code> inside it names a signal to track. At each sampling event the tool records which value was seen and updates a set of <strong>bins</strong> — one per distinct value by default:</p>
+<pre>covergroup cg_opcode @(posedge clk);
+  coverpoint opcode;   // auto-creates 4 bins: opcode==0, 1, 2, 3
+endgroup
+
+cg_opcode cov = new;  // instantiate like a class object</pre>
+<p>The covergroup fires at every rising clock edge and samples <code>opcode</code>. Once all 4 bins have been hit at least once, coverage reaches 100%.</p>
+<p>Open <code>cov_intro.sv</code>. The testbench starts <code>opcode</code> at 0 and increments it once per cycle for 6 cycles, so the sequence of sampled values is <code>0 1 2 3 0 1</code>. All four values appear, so after the run you should see <strong>100% coverage</strong>.</p>
+<p>Add the missing <code>coverpoint</code> line and run to confirm.</p>
+<blockquote><p>Coverage percentage only tells you which values were <em>seen</em> — not whether the design behaved correctly for each one. You need both assertions (correctness) and coverage (completeness) for a thorough verification plan.</p></blockquote>

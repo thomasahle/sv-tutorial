@@ -11,3 +11,7 @@ case (state)
 endcase</pre>
               <p>Open <code>status.sv</code> and fill in the two active <code>case</code> branches using the named constants <code>RUNNING</code> and <code>ERROR</code>.</p>
               <blockquote><p>With <code>unique case</code> or in strict-mode tools, an unhandled enum value raises a warning. Add a <code>default</code> branch to catch any encoding bugs.</p></blockquote>
+              <h2>Testbench</h2>
+              <p>The testbench drives <code>st</code> through all four enum values and prints the outputs. Because <code>status_display</code> is combinational, no clock is needed — outputs update in the same delta after each assignment:</p>
+              <pre>st = RUNNING; #1 $display("RUNNING: active=%b err=%b (expect 1 0)", active, err);</pre>
+              <p>The expected values make it easy to spot a wrong branch at a glance: only <code>RUNNING</code> sets <code>active</code>, and only <code>ERROR</code> sets <code>err</code>.</p>

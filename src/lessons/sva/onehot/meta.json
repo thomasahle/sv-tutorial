@@ -1,5 +1,5 @@
 {
   "title": "$onehot, $onehot0, $countones",
-  "waveform": "required",
-  "focus": "/src/arbiter_check.sv"
+  "focus": "/src/arbiter_check.sv",
+  "runner": "bmc"
 }

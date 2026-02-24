@@ -10,9 +10,13 @@ module tb;
 
   initial begin
     @(posedge clk); rst_n = 1;
-    // req stays low the entire run — $rose(req) never fires.
+    // Step 2: uncomment these lines to pulse req and drive gnt within 2 cycles.
+    // Watch the cover fire — confirming the property was actually exercised.
+    // repeat(3) @(posedge clk);
+    // req = 1; @(posedge clk); req = 0;
+    // @(posedge clk); gnt = 1; @(posedge clk); gnt = 0;
     repeat (10) @(posedge clk);
-    $display("done: no assert failures, but did rg_cover ever fire?");
+    $display("done: did rg_cover fire?");
     $finish;
   end
 endmodule

@@ -1,12 +1,12 @@
 <p>
-  Clock generation is so common in cocotb that it ships a helper. <code>Clock</code> drives a signal
-  at a given period; <code>cocotb.start_soon()</code> launches it as a background task, running
-  concurrently with the rest of your test.
+  Cocotb drives clocks using <code>Timer(n, units="ns")</code> — the Python equivalent of
+  <code>#n</code> in Verilog. The helper <code>clock_cycle(dut)</code> in
+  <code>test_counter.py</code> performs one full 10&nbsp;ns period: drive low, wait 5&nbsp;ns,
+  drive high (posedge fires here), wait 5&nbsp;ns.
 </p>
 <p>
-  <code>RisingEdge(dut.clk)</code> is the Python equivalent of <code>@(posedge clk)</code>.
-  <code>ClockCycles(dut.clk, n)</code> waits for <em>n</em> rising edges — the equivalent of
-  <code>repeat(n) @(posedge clk)</code>. The full test is in <code>test_counter.py</code>.
+  After each rising edge the DUT has already updated, so you can read
+  <code>dut.count.value</code> immediately — no extra delay needed.
 </p>
 <p>
   Open <code>counter.sv</code> and implement the 4-bit up-counter with synchronous reset.
@@ -14,8 +14,8 @@
 </p>
 <blockquote>
   <p>
-    <code>cocotb.start_soon()</code> is how cocotb models concurrent activity — the Python analogue
-    of launching an <code>always</code> block. Any number of coroutines can run concurrently in a
-    single test.
+    <code>Timer</code> is the fundamental cocotb trigger: it fires exactly once at the
+    scheduled simulation time. Higher-level helpers like <code>RisingEdge</code> and
+    <code>Clock</code> are built on top of it.
   </p>
 </blockquote>

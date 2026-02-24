@@ -1,4 +1,4 @@
-<p>A <strong>recursive property</strong> is a property that refers to itself in its own body, creating a self-referential temporal statement. They must use the non-overlapping implication <code>|=&gt;</code> (never <code>|-&gt;</code>) to avoid zero-time loops:</p>
+<p>Properties can accept <strong>formal parameters</strong> — just like modules accept ports — so you can write generic, reusable property templates. A <strong>recursive property</strong> takes this one step further by referring to itself in its own body, creating a self-referential temporal statement. Recursive properties must use the non-overlapping implication <code>|=&gt;</code> (never <code>|-&gt;</code>) to avoid zero-time loops:</p>
 <pre>property p_hold(logic sig, logic release_cond);
   @(posedge clk) sig && !release_cond |=> p_hold(sig, release_cond);
 endproperty</pre>

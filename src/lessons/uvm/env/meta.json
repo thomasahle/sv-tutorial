@@ -1,5 +1,4 @@
 {
   "title": "Environment and Test",
-  "waveform": "optional",
   "focus": "/src/adder_env.sv"
 }

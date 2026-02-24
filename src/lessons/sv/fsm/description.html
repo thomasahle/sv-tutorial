@@ -13,3 +13,9 @@ always_comb begin
 end</pre>
               <p>This module detects the sequence <strong>1 → 0 → 1</strong> on serial input <code>din</code>. Open <code>seq_det.sv</code> and fill in the four <code>case</code> branches inside the <code>always_comb</code> block.</p>
               <blockquote><p>The default assignment <code>next = state</code> at the top of the <code>always_comb</code> block means "stay in the current state unless a branch overrides it." This eliminates latches and makes every unspecified transition explicit.</p></blockquote>
+              <h2>Testbench</h2>
+              <p>The testbench uses a <code>task</code> to drive one bit per clock edge and advance simulation time in one call:</p>
+              <pre>task automatic send(input logic b);
+  din = b; @(posedge clk); #1;
+endtask</pre>
+              <p>This makes the stimulus readable as a sequence of bits. The test first sends <strong>1→0→1</strong> (expect <code>detected=1</code>), then a longer stream that contains a second match, then an extra <code>0</code> that breaks the pattern.</p>

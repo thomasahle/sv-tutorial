@@ -2,4 +2,3 @@
 <p>Open <code>req_ack.sv</code>. The spec is: <em>after <code>req</code> rises, <code>ack</code> must go high within 1 to 3 clock cycles.</em></p>
 <p>Complete the property using <code>$rose</code>, <code>|=></code>, and <code>##[0:2]</code>:</p>
 <pre>$rose(req) |=> ##[0:2] ack</pre>
-<blockquote><p><code>$rose(req)</code> is true only when <code>req</code> just transitioned from 0 to 1 — it won't re-trigger while <code>req</code> stays high.</p></blockquote>

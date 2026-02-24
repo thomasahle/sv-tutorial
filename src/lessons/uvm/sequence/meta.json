@@ -1,5 +1,4 @@
 {
   "title": "Sequences",
-  "waveform": "optional",
   "focus": "/src/adder_seq.sv"
 }

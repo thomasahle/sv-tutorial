@@ -1,5 +1,5 @@
 {
   "title": "$stable and $past",
-  "waveform": "required",
-  "focus": "/src/stable_check.sv"
+  "focus": "/src/stable_check.sv",
+  "runner": "bmc"
 }

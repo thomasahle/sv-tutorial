@@ -1,5 +1,5 @@
 {
   "title": "cover property",
-  "waveform": "required",
-  "focus": "/src/bus_check.sv"
+  "focus": "/src/bus_check.sv",
+  "runner": "bmc"
 }

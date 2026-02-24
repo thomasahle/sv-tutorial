@@ -1,5 +1,4 @@
 {
   "title": "covergroup and coverpoint",
-  "waveform": "optional",
   "focus": "/src/cov_intro.sv"
 }

@@ -6,3 +6,7 @@
   ...
 endcase</pre>
               <blockquote><p>Always-combinational blocks should have a <strong>default assignment</strong> before the <code>casez</code> to avoid unintended latches if no branch matches.</p></blockquote>
+              <h2>Testbench</h2>
+              <p>The testbench applies four representative inputs and checks which requester wins. Each <code>$display</code> includes the expected result so a wrong branch is immediately obvious:</p>
+              <pre>req=4'b0110; #1 $display("... (expect grant=2)", ...);</pre>
+              <p>The critical case is <code>4'b0110</code> — bits 1 <em>and</em> 2 are both set, so the encoder must grant bit 2 (the higher index), not bit 1. This confirms that the <code>casez</code> branches are ordered correctly, with the highest-priority pattern first.</p>

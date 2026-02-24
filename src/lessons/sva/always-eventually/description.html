@@ -14,4 +14,4 @@ property p_lock_stable;
   @(posedge clk) lock |-> always lock;
 endproperty</pre>
 <p>Open <code>liveness.sv</code> and fill in both property bodies.</p>
-<blockquote><p><code>s_eventually</code> and <code>always</code> used as property operators are <strong>IEEE 1800-2012</strong> features. They express Linear Temporal Logic (LTL) properties and require a formal tool that supports unbounded reasoning. Bounded model checking can only falsify them within its bound, not fully prove them.</p></blockquote>
+<blockquote><p><code>s_eventually</code> and <code>always</code> used as property operators are <strong>IEEE 1800-2012</strong> features. They express Linear Temporal Logic (LTL) properties and require a formal tool that supports unbounded reasoning. Bounded model checking can only <em>falsify</em> them within its bound — if BMC reports no counterexample, that is <strong>not</strong> a proof. It only means no violation was found up to the exploration depth. Fully proving liveness requires an unbounded prover or k-induction.</p></blockquote>

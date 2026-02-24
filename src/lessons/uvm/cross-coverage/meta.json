@@ -1,5 +1,4 @@
 {
   "title": "Cross Coverage",
-  "waveform": "off",
   "focus": "/src/adder_coverage.sv"
 }

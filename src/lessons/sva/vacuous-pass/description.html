@@ -1,10 +1,12 @@
 <p>An implication property <code>antecedent |-> consequent</code> <strong>passes vacuously</strong> when the antecedent never evaluates to true. The assertion fires zero times and reports no failures — which can be falsely reassuring.</p>
-<p>The testbench below never drives <code>req</code> high, so <code>$rose(req)</code> never fires. The <code>assert</code> reports a clean pass, but nothing was actually checked.</p>
 <p>The fix is to always pair an <code>assert</code> with a companion <code>cover property</code> on the same property. <code>cover</code> does <em>not</em> pass vacuously: its pass action only fires when the antecedent actually matched and the full sequence succeeded:</p>
 <pre>rg_assert: assert property (req_gnt)
   else $display("FAIL at t=%0t", $time);
 rg_cover:  cover  property (req_gnt)
            $display("antecedent fired at t=%0t", $time);</pre>
-<p>If the simulation ends with zero <code>cover</code> hits and zero <code>assert</code> failures, the property has told you nothing.</p>
-<p>Open <code>vacuous.sv</code> and add both statements. Run the simulation — notice the cover never fires. Then look at <code>tb.sv</code> and consider what change would make it fire.</p>
-<blockquote><p>A common practice: suppress the <code>assert</code> pass action entirely (leave it empty) and rely on the companion <code>cover</code> to confirm the property was exercised. The assert only needs to fire when something goes wrong.</p></blockquote>
+<p>This lesson has two steps:</p>
+<ol>
+  <li>Open <code>vacuous.sv</code> and add the <code>assert</code> and <code>cover</code> statements. Run — notice the cover never fires, because <code>tb.sv</code> never drives <code>req</code> high.</li>
+  <li>Open <code>tb.sv</code> and uncomment the TODO lines to pulse <code>req</code> and then drive <code>gnt</code> high. Run again — the cover fires, confirming the property was actually exercised.</li>
+</ol>
+<blockquote><p>If the simulation ends with zero <code>cover</code> hits and zero <code>assert</code> failures, the property has told you nothing. A clean run only means something when the cover confirms the antecedent fired.</p></blockquote>

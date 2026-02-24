@@ -1,6 +1,5 @@
 {
   "title": "Your First cocotb Test",
-  "waveform": "off",
   "runner": "cocotb",
   "focus": "/src/test_adder.py"
 }

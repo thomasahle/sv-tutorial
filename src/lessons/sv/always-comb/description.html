@@ -7,3 +7,7 @@
   2'b10: y = c;
   2'b11: y = d;
 endcase</pre>
+              <h2>Testbench</h2>
+              <p>Each input is initialized to a distinct hex constant — <code>AA</code>, <code>BB</code>, <code>CC</code>, <code>DD</code> — so it is immediately obvious which input was selected. The testbench steps <code>sel</code> through all four values and checks the output:</p>
+              <pre>sel=0; #1 $display("sel=0 → y=%0h (expect aa)", y);</pre>
+              <p>Because <code>mux4</code> is purely combinational, <code>y</code> updates without a clock edge. The <code>#1</code> delay simply lets the combinational logic settle before reading the result.</p>

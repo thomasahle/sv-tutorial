@@ -1,4 +1,4 @@
-module req_ack_check(input logic clk, req, ack);
+module req_ack(input logic clk, req, ack);
 
   property req_ack_p;
     @(posedge clk)

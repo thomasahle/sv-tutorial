@@ -1,5 +1,4 @@
 {
   "title": "Parameters and localparam",
-  "waveform": "optional",
   "focus": "/src/counter_n.sv"
 }

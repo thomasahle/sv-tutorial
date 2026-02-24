@@ -1,5 +1,5 @@
 {
   "title": "Request / Acknowledge",
-  "waveform": "required",
-  "focus": "/src/req_ack.sv"
+  "focus": "/src/req_ack.sv",
+  "runner": "bmc"
 }

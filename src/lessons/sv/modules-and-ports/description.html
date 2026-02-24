@@ -5,7 +5,7 @@
 <h2>Testbench</h2>
 <p>Every design needs a <strong>testbench</strong> (<code>tb.sv</code>) — a separate module that drives inputs and checks outputs. It is never synthesized; it only runs in simulation.</p>
 <p>The testbench <em>instantiates</em> the design under test (the <code>adder</code>) and connects its ports by name:</p>
-<pre>adder dut(.a(a), .b(b), .sum(sum));</pre>
+<pre>adder dut(.a(a), .b(b), .sum(result));</pre>
 <p>An <code>initial</code> block runs once at time zero. Here it sets <code>a = 10</code> and <code>b = 32</code>, then after a 1-unit delay prints the result with <code>$display</code>.</p>
 <p>After running the code, you should see the correct sum of <code>42</code> (<code>0x2a</code>) in the Waves tab:</p>
 <p><img src="waves.png" alt="Adder waveform" style="max-width:100%; border-radius:6px;"></p>

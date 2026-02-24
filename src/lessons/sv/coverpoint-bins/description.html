@@ -1,9 +1,10 @@
-<p>Coverpoints can be partitioned into named <strong>bins</strong> so you can track meaningful categories instead of raw values.</p>
-<p>You can also exclude uninteresting values with <code>ignore_bins</code>:</p>
+<p>By default a coverpoint creates one bin per distinct value. For a 2-bit signal that is four separate bins — but your verification goal is rarely "hit every raw integer". <strong>Named bins</strong> let you group values into meaningful categories and give reviewers a clear picture of what was tested:</p>
 <pre>coverpoint burst {
-  bins low = {0,1};
-  bins high = {2};
-  ignore_bins idle = {3};
+  bins low   = {2'd0, 2'd1};   // burst lengths that fit in one beat
+  bins high  = {2'd2};         // burst length that requires two beats
+  ignore_bins idle = {2'd3};   // encoding unused by the protocol
 }</pre>
-<p>Open <code>cov_bins.sv</code> and add the two bins and one <code>ignore_bins</code> entry.</p>
-<blockquote><p>Use bins to encode intent. A reviewer should be able to infer the verification goal from bin names alone.</p></blockquote>
+<p>Now coverage is measured against <em>three categories</em> instead of four raw values. <code>ignore_bins</code> removes a value from the coverage calculation entirely — hitting or missing it has no effect on the percentage, which keeps your 100% target meaningful.</p>
+<p>Open <code>cov_bins.sv</code>. The signal is called <code>burst</code> and the testbench cycles through <code>0 1 2 3 0 1 2 3</code>. Add the two <code>bins</code> and the <code>ignore_bins</code> entry.</p>
+<p>After the run: <code>low</code> is hit (values 0 and 1 appear), <code>high</code> is hit (value 2 appears), <code>idle</code> is excluded. Both meaningful bins are covered → <strong>100%</strong>.</p>
+<blockquote><p>There is also <code>illegal_bins</code> — like <code>ignore_bins</code> it is excluded from coverage, but it additionally causes a simulation error if the value ever occurs. Use it for encodings that should be impossible, not just uninteresting.</p></blockquote>
