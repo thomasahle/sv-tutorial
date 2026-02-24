@@ -249,6 +249,23 @@
     return trimmed;
   }
 
+  function startNarrowResize(e) {
+    e.preventDefault();
+    const section = e.currentTarget.parentElement;
+    const totalH = section.getBoundingClientRect().height;
+    const startY = e.clientY, startSplit = hSplit;
+    const onMove = ev => {
+      const raw = startSplit + (ev.clientY - startY) / totalH * 100;
+      hSplit = Math.min(Math.max(raw, 15), 75);
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
+
   function startHResize(e) {
     e.preventDefault();
     const section = e.currentTarget.parentElement;
@@ -419,7 +436,7 @@
 
 <section class="flex-1 min-h-0 flex max-narrow:flex-col">
   <article bind:this={lessonArticleEl} style="flex: 0 0 {hSplit}%; min-width: 200px"
-           class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 flex flex-col p-[0.9rem] gap-3 overflow-y-auto [scrollbar-gutter:stable]">
+           class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 flex flex-col p-[0.9rem] gap-3 overflow-y-auto [scrollbar-gutter:stable] max-narrow:border-0 max-narrow:shadow-none max-narrow:rounded-none">
     <h2 data-testid="lesson-title" class="m-0 text-[1.15rem] font-bold leading-tight text-foreground">{lesson.title}</h2>
     <div class="lesson-body">
       {@html lesson.html}
@@ -465,12 +482,19 @@
     </div>
   </article>
 
-  <!-- Horizontal drag handle — hidden on narrow -->
+  <!-- Horizontal drag handle — wide only -->
   <div role="separator" aria-label="Resize panels" aria-orientation="vertical"
        class="max-narrow:hidden flex-none w-[0.7rem] flex items-center justify-center cursor-col-resize select-none group"
        style="touch-action:none"
        onpointerdown={startHResize}>
     <div class="w-[2px] h-8 rounded-full bg-border group-hover:bg-teal transition-colors"></div>
+  </div>
+  <!-- Vertical drag handle — narrow only -->
+  <div role="separator" aria-label="Resize panels" aria-orientation="horizontal"
+       class="hidden max-narrow:flex flex-none h-[0.7rem] items-center justify-center cursor-row-resize select-none group"
+       style="touch-action:none"
+       onpointerdown={startNarrowResize}>
+    <div class="h-[2px] w-8 rounded-full bg-border group-hover:bg-teal transition-colors"></div>
   </div>
 
   <section style="flex: 1 1 0%; min-width: 300px" class="min-h-0 flex flex-col">
@@ -508,7 +532,7 @@
 
     <!-- Editor pane -->
     <div style="flex: 0 0 {vSplit}%; min-height: 150px"
-         class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 overflow-hidden {splitView && canSplit ? 'flex flex-row' : 'grid grid-rows-[auto_1fr]'}">
+         class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 overflow-hidden max-narrow:border-0 max-narrow:shadow-none max-narrow:rounded-none {splitView && canSplit ? 'flex flex-row' : 'grid grid-rows-[auto_1fr]'}">
 
       {#if splitView && canSplit}
         <!-- Split view: two editors side by side -->
@@ -603,7 +627,7 @@
 
     <!-- Runtime pane -->
     <div style="flex: 1 1 0%; min-height: 220px"
-         class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 overflow-hidden flex flex-col">
+         class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 overflow-hidden flex flex-col max-narrow:border-0 max-narrow:shadow-none max-narrow:rounded-none">
 
       <!-- Header: tab switcher + action buttons -->
       <div class="flex justify-between items-center gap-[0.7rem] px-[0.5rem] py-[0.35rem]">
