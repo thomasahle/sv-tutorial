@@ -13,6 +13,9 @@ task automatic send(input logic [7:0] d);
   @(posedge clk); #1;
   tx_valid = 0;
 endtask</pre>
+<p>After filling them in, the testbench prints:</p>
+<pre>sent 0x01  parity=1 (expect 1)   // 0x01 = 1 set bit  → odd  → 1
+sent 0xFF  parity=0 (expect 0)   // 0xFF = 8 set bits → even → 0</pre>
 <p>The <code>automatic</code> keyword gives each call its own stack frame. Without it, local variables are static and shared between concurrent invocations — a common source of testbench bugs when tasks are called from multiple threads.</p>
 <p>Open <code>tb.sv</code> and fill in both subprograms.</p>
 <blockquote><p>In UVM, the <code>run_phase</code> of a driver is essentially a <code>task</code>: it loops forever, pulling items from the sequencer and calling a transaction-level send task for each one.</p></blockquote>

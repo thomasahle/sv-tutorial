@@ -20,8 +20,8 @@ module tb;
 
   initial begin
     @(posedge clk); #1;
-    send(8'hA5);
-    $display("sent 0xA5  parity=%b (expect 1)", parity(8'hA5));
+    send(8'h01);
+    $display("sent 0x01  parity=%b (expect 1)", parity(8'h01));
     send(8'hFF);
     $display("sent 0xFF  parity=%b (expect 0)", parity(8'hFF));
     $finish;

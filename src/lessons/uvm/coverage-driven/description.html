@@ -11,4 +11,9 @@
   phase.drop_objection(this);
 endtask</pre>
 <p>Open <code>adder_test.sv</code> and replace the single <code>seq.start()</code> call with the <code>while</code> loop above.</p>
-<blockquote><p>Always add a maximum-iteration guard to prevent infinite loops when a coverage bin is unreachable. A good practice: if coverage has not improved after N batches, print a warning and break — then investigate which bin is stuck and why.</p></blockquote>
+<blockquote><p>Always add a maximum-iteration guard in case a coverage bin is unreachable with the current constraints:</p>
+<pre>if (++iterations >= 50) begin
+  `uvm_warning("TEST", "Iteration limit reached")
+  break;
+end</pre>
+<p>If this fires, find which bin has zero hits and adjust the constraints or stimulus so that range of values can be generated.</p></blockquote>

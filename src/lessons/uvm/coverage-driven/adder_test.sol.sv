@@ -13,6 +13,7 @@ class adder_test extends uvm_test;
   endfunction
 
   task run_phase(uvm_phase phase);
+    int iterations = 0;
     phase.raise_objection(this);
 
     while (env.cov.adder_cg.get_coverage() < 100.0) begin
@@ -20,6 +21,10 @@ class adder_test extends uvm_test;
       seq.start(env.agent.seqr);
       `uvm_info("TEST", $sformatf("coverage = %.1f%%",
         env.cov.adder_cg.get_coverage()), UVM_LOW)
+      if (++iterations >= 50) begin
+        `uvm_warning("TEST", "Reached iteration limit — a coverage bin may be unreachable")
+        break;
+      end
     end
 
     phase.drop_objection(this);
