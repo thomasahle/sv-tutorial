@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Download Surfer assets
-        run: scripts/setup-surfer.sh
+        run: scripts/setup-surfer.sh public/surfer
 
       - name: Download CIRCT wasm artifacts
         # Artifacts are stored in a GitHub Release named 'circt-wasm'.
