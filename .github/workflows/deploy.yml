@@ -44,13 +44,13 @@ jobs:
         # The build proceeds without them; simulation features will be
         # unavailable but the rest of the tutorial still works.
         run: |
-          mkdir -p static/circt
+          mkdir -p public/circt
           if gh release download circt-wasm \
                --repo "$GITHUB_REPOSITORY" \
-               -D static/circt \
+               -D public/circt \
                --clobber 2>/dev/null; then
             echo "CIRCT artifacts downloaded from release 'circt-wasm'"
-            ls -lh static/circt/
+            ls -lh public/circt/
           else
             echo "::notice::No 'circt-wasm' release found; simulation features will be unavailable."
           fi
@@ -64,7 +64,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: build
 
       - name: Deploy to GitHub Pages
         id: deployment
