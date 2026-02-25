@@ -915,7 +915,8 @@ function runToolInWorker({
   readFiles,
   createDirs = [],
   uvmManifestUrl = null,
-  onOutput = null
+  onOutput = null,
+  signal = null
 }) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(getWorkerBlobUrl());
@@ -929,6 +930,20 @@ function runToolInWorker({
       }, 300000);
     };
     resetTimeout();
+
+    if (signal) {
+      if (signal.aborted) {
+        clearTimeout(timeout);
+        worker.terminate();
+        reject(new DOMException('Run cancelled', 'AbortError'));
+        return;
+      }
+      signal.addEventListener('abort', () => {
+        clearTimeout(timeout);
+        worker.terminate();
+        reject(new DOMException('Run cancelled', 'AbortError'));
+      }, { once: true });
+    }
 
     worker.onmessage = (event) => {
       const payload = event.data || {};
@@ -1084,7 +1099,8 @@ function runCocotbInWorker({
   pyCode,
   shimCode,
   maxTimeNs,
-  onLogLine = null
+  onLogLine = null,
+  signal = null
 }) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(getCocotbWorkerBlobUrl());
@@ -1098,6 +1114,20 @@ function runCocotbInWorker({
       }, 300_000);
     };
     resetTimeout();
+
+    if (signal) {
+      if (signal.aborted) {
+        clearTimeout(timeout);
+        worker.terminate();
+        reject(new DOMException('Run cancelled', 'AbortError'));
+        return;
+      }
+      signal.addEventListener('abort', () => {
+        clearTimeout(timeout);
+        worker.terminate();
+        reject(new DOMException('Run cancelled', 'AbortError'));
+      }, { once: true });
+    }
 
     worker.onmessage = (event) => {
       const payload = event.data || {};
@@ -1137,6 +1167,11 @@ export class CirctWasmAdapter {
     this.repo = CIRCT_FORK_REPO;
     this.config = getCirctRuntimeConfig();
     this.ready = false;
+    this._runController = null;
+  }
+
+  cancel() {
+    this._runController?.abort();
   }
 
   async init() {
@@ -1170,7 +1205,8 @@ export class CirctWasmAdapter {
       readFiles,
       createDirs,
       uvmManifestUrl,
-      onOutput
+      onOutput,
+      signal: this._runController?.signal ?? null
     });
   }
 
@@ -1206,6 +1242,7 @@ export class CirctWasmAdapter {
   }
 
   async run({ files, top, simulate = true, onStatus = null, onLog = null }) {
+    this._runController = new AbortController();
     try {
       await this.init();
 
@@ -1442,6 +1479,7 @@ export class CirctWasmAdapter {
       };
     } catch (error) {
       if (typeof onStatus === 'function') onStatus('done');
+      if (error.name === 'AbortError') return { ok: false, logs: [], waveform: null };
       return {
         ok: false,
         logs: [
@@ -1458,6 +1496,7 @@ export class CirctWasmAdapter {
   }
 
   async runBmc({ files, top, onStatus = null, onLog = null }) {
+    this._runController = new AbortController();
     try {
       await this.init();
 
@@ -1612,6 +1651,7 @@ export class CirctWasmAdapter {
 
     } catch (error) {
       if (typeof onStatus === 'function') onStatus('done');
+      if (error.name === 'AbortError') return { ok: false, logs: [] };
       return {
         ok: false,
         logs: [
@@ -1625,6 +1665,7 @@ export class CirctWasmAdapter {
   }
 
   async runCocotb({ files, top, onStatus = null, onLog = null }) {
+    this._runController = new AbortController();
     try {
       await this.init();
 
@@ -1730,6 +1771,7 @@ export class CirctWasmAdapter {
         pyCode,
         shimCode:   COCOTB_SHIM,
         maxTimeNs:  1_000_000,
+        signal:     this._runController?.signal ?? null,
         onLogLine:  (line) => {
           sawWorkerStream = true;
           emitLog(cocotbWorkerLogToStreamEntry(line));
@@ -1747,6 +1789,7 @@ export class CirctWasmAdapter {
 
     } catch (error) {
       if (typeof onStatus === 'function') onStatus('done');
+      if (error.name === 'AbortError') return { ok: false, logs: [] };
       return {
         ok: false,
         logs: [String(error?.message || error)]
@@ -1755,6 +1798,7 @@ export class CirctWasmAdapter {
   }
 
   async runLec({ files, module1, module2, onStatus = null, onLog = null }) {
+    this._runController = new AbortController();
     try {
       await this.init();
 
@@ -1927,6 +1971,7 @@ export class CirctWasmAdapter {
 
     } catch (error) {
       if (typeof onStatus === 'function') onStatus('done');
+      if (error.name === 'AbortError') return { ok: false, logs: [] };
       return {
         ok: false,
         logs: [

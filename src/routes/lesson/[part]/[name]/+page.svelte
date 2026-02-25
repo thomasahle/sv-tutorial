@@ -428,10 +428,16 @@
     }
   }
 
+  function cancelRun() {
+    if (!running || !circt) return;
+    circt.cancel();
+    appendLogEntry('# run cancelled');
+  }
+
   function onKeydown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-      runSim();
+      if (running) cancelRun(); else runSim();
     }
   }
 
@@ -585,11 +591,11 @@
       <div class="absolute bottom-3 right-3 z-10 flex gap-[0.4rem]">
         {#if lesson.runner !== 'bmc' && lesson.runner !== 'lec'}
           <button
-            onclick={() => runSim('sim')}
-            disabled={running}
+            onclick={() => (running && runMode === 'sim') ? cancelRun() : runSim('sim')}
+            disabled={running && runMode !== 'sim'}
             data-testid="run-button"
-            aria-label="{lesson.runner === 'cocotb' ? 'Test' : 'Run'} (Ctrl+Enter)"
-            title="{lesson.runner === 'cocotb' ? 'Test' : 'Run'} (Ctrl+Enter)"
+            aria-label="{(running && runMode === 'sim') ? 'Cancel' : (lesson.runner === 'cocotb' ? 'Test' : 'Run')} (Ctrl+Enter)"
+            title="{(running && runMode === 'sim') ? 'Cancel' : (lesson.runner === 'cocotb' ? 'Test' : 'Run')} (Ctrl+Enter)"
             class="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center [box-shadow:0_4px_16px_rgba(0,0,0,0.25),0_2px_6px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if running && runMode === 'sim'}
@@ -605,11 +611,11 @@
         {/if}
         {#if lesson.runner === 'bmc' || lesson.runner === 'both'}
           <button
-            onclick={() => runSim('bmc')}
-            disabled={running}
+            onclick={() => (running && runMode === 'bmc') ? cancelRun() : runSim('bmc')}
+            disabled={running && runMode !== 'bmc'}
             data-testid="verify-button"
-            aria-label="Verify"
-            title="Verify"
+            aria-label="{running && runMode === 'bmc' ? 'Cancel' : 'Verify'}"
+            title="{running && runMode === 'bmc' ? 'Cancel' : 'Verify'}"
             class="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center [box-shadow:0_4px_16px_rgba(0,0,0,0.25),0_2px_6px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if running && runMode === 'bmc'}
@@ -625,11 +631,11 @@
         {/if}
         {#if lesson.runner === 'lec'}
           <button
-            onclick={() => runSim('lec')}
-            disabled={running}
+            onclick={() => (running && runMode === 'lec') ? cancelRun() : runSim('lec')}
+            disabled={running && runMode !== 'lec'}
             data-testid="verify-button"
-            aria-label="Verify (LEC)"
-            title="Verify (LEC)"
+            aria-label="{running && runMode === 'lec' ? 'Cancel' : 'Verify (LEC)'}"
+            title="{running && runMode === 'lec' ? 'Cancel' : 'Verify (LEC)'}"
             class="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center [box-shadow:0_4px_16px_rgba(0,0,0,0.25),0_2px_6px_rgba(0,0,0,0.15)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if running && runMode === 'lec'}
