@@ -36,6 +36,9 @@ jobs:
       - name: Download Surfer assets
         run: scripts/setup-surfer.sh public/surfer
 
+      - name: Download Pyodide assets
+        run: PYODIDE_DEST_DIR=public/pyodide scripts/setup-pyodide.sh
+
       - name: Download CIRCT wasm artifacts
         # Artifacts are stored in a GitHub Release named 'circt-wasm'.
         # To publish them locally, run:

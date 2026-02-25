@@ -64,6 +64,9 @@ jobs:
       - name: Setup Surfer assets
         run: scripts/setup-surfer.sh
 
+      - name: Setup Pyodide assets
+        run: scripts/setup-pyodide.sh
+
       - name: Configure git credentials for private CIRCT fork
         run: gh auth setup-git
 

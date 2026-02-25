@@ -7,6 +7,11 @@ export default {
   kit: {
     adapter: adapter({ fallback: '404.html' }),
     paths: { base },
+    serviceWorker: {
+      // We register manually from +layout.svelte with module mode so dev/prod
+      // behavior stays consistent and we can gate offline download in dev.
+      register: false
+    },
     prerender: {
       // Lesson HTML embeds <img src="waves.png"> which Vite rewrites client-side
       // but not during SSR prerendering — the crawler sees the original relative

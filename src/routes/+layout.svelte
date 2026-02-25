@@ -5,6 +5,18 @@
   import { browser } from '$app/environment';
   import { onMount, untrack } from 'svelte';
   import '../app.css';
+  import { getCirctRuntimeConfig, Z3_SCRIPT_URL } from '../runtime/circt-config.js';
+  import {
+    OFFLINE_APP_CACHE_PREFIX,
+    OFFLINE_RUNTIME_CACHE,
+    OFFLINE_STATE_KEY,
+    offlineReadySentinelUrl,
+    PYODIDE_MANIFEST_RELATIVE_PATH,
+    UVM_MANIFEST_RELATIVE_PATH,
+    buildConfiguredRuntimeUrls,
+    dedupeStrings,
+    joinBasePath,
+  } from '$lib/offline-cache.js';
   import { darkMode } from '$lib/stores/settings.js';
   import { completedSlugs } from '$lib/stores/completed.js';
   import {
@@ -26,6 +38,252 @@
   let sidebarOpen = $state(true);
   let expandedChapters = $state(new Set());
   let sidebarInnerEl = $state(null);
+  let offlineMode = $state('idle');
+  let offlineDone = $state(0);
+  let offlineTotal = $state(0);
+  let offlineMessage = $state('');
+  const offlineFeatureEnabled = import.meta.env.PROD;
+
+  function runtimeBasePath() {
+    return base ? `${base}/` : '/';
+  }
+
+  function formatBytes(bytes) {
+    const value = Number(bytes) || 0;
+    if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function isSameOriginAssetUrl(url) {
+    try {
+      return new URL(url, window.location.href).origin === window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  function toAbsolute(url) {
+    return new URL(String(url), window.location.href).href;
+  }
+
+  function offlineReadyMarkerUrl() {
+    return toAbsolute(offlineReadySentinelUrl(runtimeBasePath()));
+  }
+
+  async function hasOfflineReadyMarker() {
+    if (!browser || !('caches' in window)) return false;
+    try {
+      const cache = await caches.open(OFFLINE_RUNTIME_CACHE);
+      const marker = await cache.match(offlineReadyMarkerUrl());
+      return Boolean(marker);
+    } catch {
+      return false;
+    }
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url, { cache: 'reload' });
+    if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  async function ensureOfflineServiceWorker() {
+    if (!offlineFeatureEnabled) return null;
+    if (!browser || !('serviceWorker' in navigator)) return null;
+    const swUrl = `${base || ''}/service-worker.js`;
+    const registration = await navigator.serviceWorker.register(swUrl, {
+      type: 'module',
+      updateViaCache: 'none'
+    });
+    await navigator.serviceWorker.ready;
+    return registration;
+  }
+
+  async function clearOfflineArtifactsForDev() {
+    if (!browser) return;
+    localStorage.removeItem(OFFLINE_STATE_KEY);
+    offlineMode = 'idle';
+    offlineDone = 0;
+    offlineTotal = 0;
+    offlineMessage = '';
+
+    if ('serviceWorker' in navigator) {
+      const scopeRoot = new URL(`${base || ''}/`, window.location.href).href;
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations
+          .filter((registration) => registration.scope.startsWith(scopeRoot))
+          .map((registration) => registration.unregister().catch(() => false))
+      );
+    }
+
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((key) => key === OFFLINE_RUNTIME_CACHE || key.startsWith(OFFLINE_APP_CACHE_PREFIX))
+          .map((key) => caches.delete(key))
+      );
+    }
+  }
+
+  async function resolveOfflineAssetUrls(config) {
+    const basePath = runtimeBasePath();
+    const urls = buildConfiguredRuntimeUrls({
+      basePath,
+      runtimeConfig: config,
+      z3ScriptUrl: Z3_SCRIPT_URL,
+    });
+
+    const uvmManifestUrl = toAbsolute(joinBasePath(basePath, UVM_MANIFEST_RELATIVE_PATH));
+    urls.push(uvmManifestUrl);
+    try {
+      const uvmManifest = await fetchJson(uvmManifestUrl);
+      const srcBaseUrl = new URL('src/', uvmManifestUrl).href;
+      for (const relPath of uvmManifest.files || []) {
+        const rel = String(relPath || '').replace(/^\/+/, '');
+        if (!rel || rel.includes('..')) continue;
+        urls.push(new URL(rel, srcBaseUrl).href);
+      }
+    } catch {
+      // Best-effort: UVM sources are only needed for UVM lessons.
+    }
+
+    const pyodideManifestUrl = toAbsolute(joinBasePath(basePath, PYODIDE_MANIFEST_RELATIVE_PATH));
+    try {
+      const pyodideManifest = await fetchJson(pyodideManifestUrl);
+      const manifestBase = new URL(String(pyodideManifest.basePath || './'), pyodideManifestUrl).href;
+      for (const relPath of pyodideManifest.files || []) {
+        const rel = String(relPath || '').replace(/^\/+/, '');
+        if (!rel || rel.includes('..')) continue;
+        urls.push(new URL(rel, manifestBase).href);
+      }
+    } catch {
+      // If no local manifest is present, we'll still cache configured pyodide URLs.
+    }
+
+    urls.push(toAbsolute(runtimeBasePath()));
+    urls.push(toAbsolute(joinBasePath(basePath, '404.html')));
+    urls.push(toAbsolute(joinBasePath(basePath, 'service-worker.js')));
+    return dedupeStrings(urls);
+  }
+
+  function offlineButtonTitle() {
+    if (!offlineFeatureEnabled) {
+      return 'Offline bundle download is available in preview/prod builds';
+    }
+    if (offlineMode === 'downloading') {
+      const total = offlineTotal || '?';
+      return `Downloading offline bundle (${offlineDone}/${total})`;
+    }
+    if (offlineMode === 'ready') {
+      return offlineMessage || 'Offline bundle is ready';
+    }
+    if (offlineMode === 'error') {
+      return offlineMessage || 'Offline bundle download failed';
+    }
+    return 'Download offline bundle';
+  }
+
+  function offlineButtonLabel() {
+    if (!offlineFeatureEnabled) return 'Offline bundle unavailable in dev mode';
+    if (offlineMode === 'downloading') return 'Downloading offline bundle';
+    if (offlineMode === 'ready') return 'Offline bundle ready';
+    if (offlineMode === 'error') return 'Retry offline bundle download';
+    return 'Download offline bundle';
+  }
+
+  function offlineProgressText() {
+    if (offlineMode === 'downloading') {
+      const total = offlineTotal || '?';
+      return `${offlineDone}/${total}`;
+    }
+    if (offlineMode === 'ready') return 'offline ready';
+    if (offlineMode === 'error') return 'download failed';
+    return '';
+  }
+
+  async function downloadOfflineBundle() {
+    if (!browser || !offlineFeatureEnabled || offlineMode === 'downloading') return;
+    offlineMode = 'downloading';
+    offlineDone = 0;
+    offlineTotal = 0;
+    offlineMessage = 'Preparing offline bundle...';
+
+    try {
+      await ensureOfflineServiceWorker();
+      const config = getCirctRuntimeConfig();
+      const allUrls = await resolveOfflineAssetUrls(config);
+      const urls = allUrls.filter((url) => isSameOriginAssetUrl(url));
+      const skippedCrossOrigin = allUrls.length - urls.length;
+      if (urls.length === 0) {
+        throw new Error('No same-origin assets were found to cache');
+      }
+
+      offlineTotal = urls.length;
+      const cache = await caches.open(OFFLINE_RUNTIME_CACHE);
+      const readyMarkerRequest = new Request(offlineReadyMarkerUrl(), { method: 'GET' });
+      const failures = [];
+      let skippedMissing = 0;
+      let bytes = 0;
+      let success = 0;
+
+      for (const url of urls) {
+        try {
+          const request = new Request(url, { method: 'GET' });
+          const response = await fetch(request, { cache: 'reload' });
+          if (response.status === 404) {
+            skippedMissing += 1;
+            continue;
+          }
+          if (!response.ok && response.type !== 'opaque') {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const contentLength = Number(response.headers.get('content-length') || 0);
+          if (contentLength > 0) bytes += contentLength;
+          await cache.put(request, response.clone());
+          success += 1;
+        } catch (error) {
+          failures.push(`${url}: ${String(error?.message || error)}`);
+        } finally {
+          offlineDone += 1;
+        }
+      }
+
+      if (failures.length > 0) {
+        await cache.delete(readyMarkerRequest);
+        offlineMode = 'error';
+        offlineMessage = `Cached ${success}/${offlineTotal} files. ${failures.length} failed.`;
+        localStorage.removeItem(OFFLINE_STATE_KEY);
+      } else {
+        await cache.put(
+          readyMarkerRequest,
+          new Response('ready', {
+            headers: { 'content-type': 'text/plain; charset=utf-8' }
+          })
+        );
+        offlineMode = 'ready';
+        offlineMessage = `Cached ${success} files (${formatBytes(bytes)}).`;
+        if (skippedMissing > 0) {
+          offlineMessage += ` Skipped ${skippedMissing} missing optional files.`;
+        }
+        if (skippedCrossOrigin > 0) {
+          offlineMessage += ` Skipped ${skippedCrossOrigin} cross-origin URLs.`;
+        }
+        localStorage.setItem(OFFLINE_STATE_KEY, 'ready');
+      }
+    } catch (error) {
+      offlineMode = 'error';
+      offlineMessage = String(error?.message || error || 'Offline download failed');
+      localStorage.removeItem(OFFLINE_STATE_KEY);
+      if ('caches' in window) {
+        caches
+          .open(OFFLINE_RUNTIME_CACHE)
+          .then((cache) => cache.delete(offlineReadyMarkerUrl()))
+          .catch(() => {});
+      }
+    }
+  }
 
   function toggleChapter(title) {
     if (expandedChapters.has(title)) {
@@ -71,10 +329,38 @@
     darkMode.update(v => !v);
   }
 
+  function getPartLessons(part) {
+    return part.chapters.flatMap((chapter) => chapter.lessons);
+  }
+
+  function getPartCompletedCount(part) {
+    return getPartLessons(part).filter((lessonItem) => $completedSlugs.has(lessonItem.slug)).length;
+  }
+
   onMount(() => {
+    if (!window.matchMedia('(min-width: 980px)').matches) sidebarOpen = false;
     if (localStorage.getItem('svt:darkMode') === null) {
       darkMode.set(window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
+    if (!offlineFeatureEnabled) {
+      clearOfflineArtifactsForDev().catch(() => {});
+      return;
+    }
+    if (localStorage.getItem(OFFLINE_STATE_KEY) === 'ready') {
+      hasOfflineReadyMarker()
+        .then((ready) => {
+          if (ready) {
+            offlineMode = 'ready';
+            offlineMessage = 'Offline bundle is ready';
+            return;
+          }
+          localStorage.removeItem(OFFLINE_STATE_KEY);
+        })
+        .catch(() => {
+          localStorage.removeItem(OFFLINE_STATE_KEY);
+        });
+    }
+    ensureOfflineServiceWorker().catch(() => {});
   });
 </script>
 
@@ -82,8 +368,13 @@
   <div bind:this={sidebarInnerEl} class="flex flex-col p-2 gap-0">
     {#each data.parts as part, pi}
       {#if pi > 0}<div class="border-t border-sidebar-border mx-1 my-2"></div>{/if}
-      <div class="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground px-2 py-[0.3rem] mt-1 select-none">
-        {part.title}
+      <div class="text-[0.6rem] font-bold uppercase tracking-widest text-muted-foreground px-2 py-[0.3rem] mt-1 select-none flex items-center">
+        <span>{part.title}</span>
+        {#if getPartCompletedCount(part) > 0}
+          <span class="text-[0.55rem] text-teal ml-auto flex-shrink-0">
+            {getPartCompletedCount(part)}/{getPartLessons(part).length}
+          </span>
+        {/if}
       </div>
       {#each part.chapters as chapter}
         <button
@@ -148,6 +439,38 @@
             </svg>
           </a>
           <button
+            onclick={downloadOfflineBundle}
+            disabled={!offlineFeatureEnabled || offlineMode === 'downloading'}
+            class="flex items-center justify-center w-8 h-8 rounded-[8px] hover:bg-surface-2 transition-colors disabled:opacity-60 disabled:cursor-default {offlineMode === 'ready' ? 'text-teal' : 'text-muted-foreground'}"
+            data-testid="offline-download-button"
+            aria-label={offlineButtonLabel()}
+            title={offlineButtonTitle()}
+          >
+            {#if offlineMode === 'downloading'}
+              <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            {:else if offlineMode === 'ready'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm5 7-6 7a1 1 0 0 1-1.5.05l-3-3a1 1 0 0 1 1.4-1.4l2.25 2.25 5.24-6.11A1 1 0 0 1 17 9Z" />
+              </svg>
+            {:else}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M11 3a1 1 0 0 1 2 0v9.59l2.3-2.29a1 1 0 0 1 1.4 1.41l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.41L11 12.59V3Zm-7 14a1 1 0 0 1 1-1h14a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z" />
+              </svg>
+            {/if}
+          </button>
+          {#if offlineMode !== 'idle'}
+            <span
+              class="text-[0.68rem] leading-none whitespace-nowrap px-2 py-[0.32rem] rounded-[8px] border {offlineMode === 'ready' ? 'text-teal border-teal/40 bg-teal/5' : offlineMode === 'error' ? 'text-destructive border-destructive/40 bg-destructive/5' : 'text-muted-foreground border-border bg-surface-2'}"
+              data-testid="offline-download-status"
+              aria-live="polite"
+              title={offlineButtonTitle()}
+            >
+              {offlineProgressText()}
+            </span>
+          {/if}
+          <button
             onclick={toggleDarkMode}
             class="flex items-center justify-center w-8 h-8 rounded-[8px] hover:bg-surface-2 transition-colors text-muted-foreground"
             aria-label={$darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -192,11 +515,13 @@
 
   <!-- Sidebar + lesson content row (relative so the absolute sidebar is contained here) -->
   <div class="flex flex-1 min-h-0 relative overflow-hidden">
-    <Sidebar collapsible="offcanvas">
+    <Sidebar variant="floating" collapsible="offcanvas">
       <SidebarContent>
         {@render navItems()}
       </SidebarContent>
     </Sidebar>
-    {@render children()}
+    <div class="flex-1 min-w-0 flex flex-col">
+      {@render children()}
+    </div>
   </div>
 </SidebarProvider>
