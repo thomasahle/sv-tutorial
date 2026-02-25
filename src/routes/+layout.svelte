@@ -43,6 +43,7 @@
   let offlineTotal = $state(0);
   let offlineMessage = $state('');
   const offlineFeatureEnabled = import.meta.env.PROD;
+  const LEGACY_COI_CLEANUP_ONCE_KEY = 'svt:legacy-coi-cleanup-once';
 
   function runtimeBasePath() {
     return base ? `${base}/` : '/';
@@ -97,6 +98,27 @@
     });
     await navigator.serviceWorker.ready;
     return registration;
+  }
+
+  async function cleanupLegacyCoiServiceWorker() {
+    if (!browser || !('serviceWorker' in navigator)) return { removed: 0, controlledByLegacy: false };
+
+    const isLegacyCoi = (scriptUrl) => String(scriptUrl || '').includes('coi-serviceworker.js');
+    const controller = navigator.serviceWorker.controller;
+    const controlledByLegacy = isLegacyCoi(controller?.scriptURL);
+
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const legacyRegs = registrations.filter((registration) =>
+      isLegacyCoi(registration.active?.scriptURL) ||
+      isLegacyCoi(registration.installing?.scriptURL) ||
+      isLegacyCoi(registration.waiting?.scriptURL)
+    );
+
+    if (legacyRegs.length === 0) return { removed: 0, controlledByLegacy };
+
+    const results = await Promise.all(legacyRegs.map((registration) => registration.unregister().catch(() => false)));
+    const removed = results.filter(Boolean).length;
+    return { removed, controlledByLegacy };
   }
 
   async function clearOfflineArtifactsForDev() {
@@ -342,25 +364,46 @@
     if (localStorage.getItem('svt:darkMode') === null) {
       darkMode.set(window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
-    if (!offlineFeatureEnabled) {
-      clearOfflineArtifactsForDev().catch(() => {});
-      return;
-    }
-    if (localStorage.getItem(OFFLINE_STATE_KEY) === 'ready') {
-      hasOfflineReadyMarker()
-        .then((ready) => {
-          if (ready) {
-            offlineMode = 'ready';
-            offlineMessage = 'Offline bundle is ready';
+
+    (async () => {
+      try {
+        const legacy = await cleanupLegacyCoiServiceWorker();
+        if (legacy.removed > 0 && legacy.controlledByLegacy) {
+          if (sessionStorage.getItem(LEGACY_COI_CLEANUP_ONCE_KEY) !== '1') {
+            sessionStorage.setItem(LEGACY_COI_CLEANUP_ONCE_KEY, '1');
+            window.location.reload();
             return;
           }
-          localStorage.removeItem(OFFLINE_STATE_KEY);
-        })
-        .catch(() => {
-          localStorage.removeItem(OFFLINE_STATE_KEY);
-        });
-    }
-    ensureOfflineServiceWorker().catch(() => {});
+        } else {
+          sessionStorage.removeItem(LEGACY_COI_CLEANUP_ONCE_KEY);
+        }
+      } catch {
+        // Best effort cleanup for older COI worker registrations.
+      }
+
+      if (!offlineFeatureEnabled) {
+        clearOfflineArtifactsForDev().catch(() => {});
+        return;
+      }
+      const offlineRequested = localStorage.getItem(OFFLINE_STATE_KEY) === 'ready';
+      if (offlineRequested) {
+        hasOfflineReadyMarker()
+          .then((ready) => {
+            if (ready) {
+              offlineMode = 'ready';
+              offlineMessage = 'Offline bundle is ready';
+              return;
+            }
+            localStorage.removeItem(OFFLINE_STATE_KEY);
+          })
+          .catch(() => {
+            localStorage.removeItem(OFFLINE_STATE_KEY);
+          });
+        // Keep service worker registration only for users who already requested
+        // offline mode; avoid expensive first-load background caching for everyone.
+        ensureOfflineServiceWorker().catch(() => {});
+      }
+    })();
   });
 </script>
 
