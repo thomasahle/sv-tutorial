@@ -15,6 +15,10 @@
   let _cmdBlobUrl = null;
   let _retryTimers = [];
   let _readyFallbackTimer = null;
+  // Stores the VisibleItemIndex of the last signal we focused via FocusItem.
+  // Re-sent before transition commands because clicking a toolbar button in the
+  // parent page blurs the iframe, causing Surfer to lose its focused-variable state.
+  let _focusedVisibleIdx = undefined;
   // Two quick retries absorb transient startup races on slower hosts.
   const LOAD_RETRY_MS = [0, 500];
   // Extra chrome-hiding passes after iframe load — WASM may still be initialising.
@@ -45,6 +49,7 @@
       URL.revokeObjectURL(_cmdBlobUrl);
       _cmdBlobUrl = null;
     }
+    _focusedVisibleIdx = undefined;
   }
 
   import { base } from '$app/paths';
@@ -109,6 +114,13 @@
   export function sendCmd(cmd) {
     const cw = iframeEl?.contentWindow;
     if (!cw) return;
+    // Clicking a toolbar button in the parent page blurs the Surfer iframe, which
+    // causes Surfer to lose its focused-variable state.  Re-send FocusItem before
+    // any command that depends on it so transition_next/prev have a signal to work on.
+    if ((cmd === 'transition_next' || cmd === 'transition_previous') &&
+        _focusedVisibleIdx !== undefined) {
+      surferMsg(cw, { FocusItem: _focusedVisibleIdx });
+    }
     const url = URL.createObjectURL(new Blob([cmd + '\n'], { type: 'text/plain' }));
     surferMsg(cw, { LoadCommandFileFromUrl: url });
     setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -331,6 +343,7 @@
             if (visibleIdx === undefined) continue;
             // FocusItem sets keyboard focus — required for transition_next/prev.
             surferMsg(cw2, { FocusItem: visibleIdx });
+            _focusedVisibleIdx = visibleIdx;
             // SetItemSelected gives the visual blue highlight.
             // Prefer id_of_name (DisplayedItemRef) for SetItemSelected when available.
             const itemRef = hasIdFn
