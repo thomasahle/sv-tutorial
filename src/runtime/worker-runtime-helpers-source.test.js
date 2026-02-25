@@ -9,4 +9,12 @@ describe('worker runtime helpers source', () => {
     expect(WORKER_RUNTIME_HELPERS_SOURCE).toContain('function installPathRequireOnly');
     expect(WORKER_RUNTIME_HELPERS_SOURCE).toContain('function loadEmscriptenTool');
   });
+
+  it('does not inject a literal backslash-n callMain shim payload', () => {
+    // A previous version appended "\\n...\\n" literally, which produced
+    // invalid JS tokens when eval() parsed the concatenated tool script.
+    expect(WORKER_RUNTIME_HELPERS_SOURCE).not.toContain(
+      "\\\\n;try{if(typeof callMain==='function'"
+    );
+  });
 });

@@ -67,12 +67,15 @@ function installPathRequireOnly(pathShim) {
   };
 }
 
-function injectCallMainExportShim(scriptText) {
-  var text = String(scriptText || '');
-  if (!text || text.indexOf('function callMain(') < 0) return text;
-  if (text.indexOf('__svt_callMain') >= 0) return text;
+function isLikelySyntaxError(error) {
+  var message = String((error && error.message) || error || '');
+  return /SyntaxError|Invalid or unexpected token|Unexpected token|Unexpected identifier/.test(message);
+}
 
-  return text + "\\n;try{if(typeof callMain==='function'&&typeof self!=='undefined'&&typeof self.__svt_callMain!=='function'){self.__svt_callMain=callMain;}}catch(_){}\\n";
+function scriptTextSummary(scriptText) {
+  var text = String(scriptText || '');
+  var preview = text.slice(0, 160).replace(/\s+/g, ' ');
+  return 'len=' + String(text.length) + ' preview=' + JSON.stringify(preview);
 }
 
 async function loadEmscriptenTool(opts) {
@@ -91,7 +94,6 @@ async function loadEmscriptenTool(opts) {
     throw new Error('Failed to load tool script: ' + String(jsUrl || ''));
   }
   scriptText = normalizeFetchedScriptText(scriptText, jsUrl);
-  scriptText = injectCallMainExportShim(scriptText);
   var isNoderawfs = !!scriptText && isNoderawfsScript(scriptText);
   var fsBundle = null;
 
@@ -113,7 +115,23 @@ async function loadEmscriptenTool(opts) {
     (0, eval)(scriptText);
   } catch (error) {
     var message = String((error && error.message) || error || 'unknown eval error');
-    throw new Error('Failed to evaluate tool script ' + String(jsUrl || '') + ': ' + message);
+    if (isLikelySyntaxError(error) && typeof importScripts === 'function') {
+      try {
+        importScripts(String(jsUrl || ''));
+      } catch (importError) {
+        var importMessage = String((importError && importError.message) || importError || 'unknown importScripts error');
+        throw new Error(
+          'Failed to load tool script ' + String(jsUrl || '') +
+          ' via eval (' + message + ') and importScripts fallback (' + importMessage + '); ' +
+          scriptTextSummary(scriptText)
+        );
+      }
+    } else {
+      throw new Error(
+        'Failed to evaluate tool script ' + String(jsUrl || '') + ': ' + message + '; ' +
+        scriptTextSummary(scriptText)
+      );
+    }
   }
   if (afterEval) afterEval();
 
