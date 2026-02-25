@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
+import { readdir, readFile } from 'node:fs/promises';
 import { access } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const HOST = process.env.REPRO_HOST || '127.0.0.1';
@@ -9,6 +12,11 @@ const DEFAULT_PORT = Number(process.env.REPRO_PORT || '43173');
 const BASE_URL_OVERRIDE = (process.env.REPRO_BASE_URL || '').trim();
 const SERVER_READY_TIMEOUT_MS = 45_000;
 const COMPILE_TIMEOUT_MS = 180_000;
+const NAVIGATION_TIMEOUT_MS = 30_000;
+const NAVIGATION_RETRIES = 4;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, '..');
+const UVM_LESSON_DIR = path.join(REPO_ROOT, 'src', 'lessons', 'uvm');
 
 const REQUIRED_FILES = [
   'static/circt/circt-verilog.js',
@@ -48,17 +56,71 @@ const UVM_FILES = {
   ].join('\n')
 };
 
+async function loadSolvedLessonFiles(slug) {
+  const lessonDir = path.join(UVM_LESSON_DIR, slug);
+  const entries = await readdir(lessonDir);
+  const out = {};
+
+  for (const fileName of entries) {
+    if (!fileName.endsWith('.sv') || fileName.endsWith('.sol.sv')) continue;
+    const content = await readFile(path.join(lessonDir, fileName), 'utf8');
+    out[`/src/${fileName}`] = content;
+  }
+
+  for (const fileName of entries) {
+    if (!fileName.endsWith('.sol.sv')) continue;
+    const stem = fileName.replace('.sol.sv', '.sv');
+    const content = await readFile(path.join(lessonDir, fileName), 'utf8');
+    out[`/src/${stem}`] = content;
+  }
+
+  if (Object.keys(out).length === 0) {
+    throw new Error(`no SystemVerilog files found in lesson ${slug}`);
+  }
+  return out;
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientNavigationError(error) {
+  const text = String(error && error.stack ? error.stack : error);
+  return (
+    text.includes('Execution context was destroyed') ||
+    text.includes('Cannot find context with specified id') ||
+    text.includes('Target page, context or browser has been closed') ||
+    text.includes('page.goto: Timeout') ||
+    text.includes('Navigation failed')
+  );
+}
+
+async function gotoWithRetry(page, url) {
+  let lastError;
+  for (let attempt = 1; attempt <= NAVIGATION_RETRIES; attempt += 1) {
+    try {
+      await page.goto(url, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!isTransientNavigationError(error) || attempt === NAVIGATION_RETRIES) {
+        throw error;
+      }
+      await sleep(250 * attempt);
+    }
+  }
+  throw lastError;
 }
 
 function parseArgs(argv) {
   const out = {
     expect: 'fail',
-    simulate: false
+    simulate: false,
+    lesson: ''
   };
 
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
     if (arg === '--expect-pass') {
       out.expect = 'pass';
       continue;
@@ -73,6 +135,12 @@ function parseArgs(argv) {
     }
     if (arg === '--no-simulate') {
       out.simulate = false;
+      continue;
+    }
+    if (arg === '--lesson') {
+      const next = argv[++i];
+      if (!next) throw new Error('--lesson requires a slug (e.g. reporting)');
+      out.lesson = next;
       continue;
     }
     throw new Error(`unknown argument: ${arg}`);
@@ -153,7 +221,7 @@ async function stopProcess(child) {
   } catch {}
 }
 
-async function runBrowserWorkerCompile(baseUrl, simulate) {
+async function runBrowserWorkerCompile(baseUrl, files, simulate) {
   const browser = await chromium.launch({
     headless: true,
     channel: 'chromium',
@@ -167,8 +235,7 @@ async function runBrowserWorkerCompile(baseUrl, simulate) {
 
   try {
     const page = await browser.newPage({ baseURL: baseUrl });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
+    await gotoWithRetry(page, '/');
 
     const runEvaluate = async () =>
       page.evaluate(async ({ files, simulate }) => {
@@ -189,7 +256,7 @@ async function runBrowserWorkerCompile(baseUrl, simulate) {
           streamed,
           resultLogs: Array.isArray(result.logs) ? result.logs : []
         };
-      }, { files: UVM_FILES, simulate });
+      }, { files, simulate });
 
     const evaluatePromise = (async () => {
       let lastError;
@@ -205,8 +272,7 @@ async function runBrowserWorkerCompile(baseUrl, simulate) {
             throw error;
           }
           lastError = error;
-          await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => {});
-          await page.waitForLoadState('networkidle').catch(() => {});
+          await gotoWithRetry(page, '/').catch(() => {});
           await sleep(250);
         }
       }
@@ -252,6 +318,7 @@ function analyzeLogs(payload) {
   try {
     options = parseArgs(process.argv.slice(2));
     await requireArtifacts();
+    const files = options.lesson ? await loadSolvedLessonFiles(options.lesson) : UVM_FILES;
 
     const baseUrl = BASE_URL_OVERRIDE || `http://${HOST}:${DEFAULT_PORT}`;
     if (!BASE_URL_OVERRIDE) {
@@ -264,7 +331,7 @@ function analyzeLogs(payload) {
 
     console.log('# Running minimal browser-worker UVM compile via createCirctWasmAdapter');
     console.log(`# mode: expect-${options.expect}, simulate=${options.simulate}`);
-    const payload = await runBrowserWorkerCompile(baseUrl, options.simulate);
+    const payload = await runBrowserWorkerCompile(baseUrl, files, options.simulate);
     const analysis = analyzeLogs(payload);
 
     console.log('--- Repro Summary ---');

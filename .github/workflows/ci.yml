@@ -81,3 +81,23 @@ jobs:
 
       - name: Build tutorial app
         run: npm run build
+
+      - name: Install Playwright browser (UVM smoke)
+        run: npx playwright install --with-deps chromium
+
+      - name: UVM browser-worker smoke (reporting lesson)
+        run: |
+          LOG_DIR="$RUNNER_TEMP/uvm-smoke-logs"
+          mkdir -p "$LOG_DIR"
+          ./scripts/run-uvm-browser-worker-matrix.sh \
+            --smoke \
+            --retries 3 \
+            --log-dir "$LOG_DIR"
+
+      - name: Upload UVM smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvm-smoke-logs-${{ github.run_id }}
+          path: ${{ runner.temp }}/uvm-smoke-logs
+          if-no-files-found: ignore

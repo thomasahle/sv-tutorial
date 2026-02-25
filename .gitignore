@@ -4,10 +4,16 @@ dist
 .vite
 vendor
 .svelte-kit
+build
+.svelte-kit.bak.*
+build.bak.*
+.tmp-*
+*.swp
 
 # Downloaded/built artifacts (run scripts/setup-*.sh to populate)
 static/circt/
 static/surfer/
+static/pyodide/
 
 # Dev screenshots and test artifacts
 *.png

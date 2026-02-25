@@ -1,0 +1,83 @@
+name: uvm-nightly
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uvm-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  uvm-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-1.58.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare Surfer assets
+        run: scripts/setup-surfer.sh
+
+      - name: Prepare Pyodide assets
+        run: scripts/setup-pyodide.sh
+
+      - name: Download CIRCT wasm artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p static/circt
+
+          have_all_artifacts() {
+            [ -f static/circt/circt-verilog.js ] && \
+            [ -f static/circt/circt-verilog.wasm ] && \
+            [ -f static/circt/circt-sim.js ] && \
+            [ -f static/circt/circt-sim.wasm ] && \
+            [ -f static/circt/uvm-core/uvm-manifest.json ]
+          }
+
+          if ! have_all_artifacts; then
+            gh release download circt-wasm \
+              --repo "$GITHUB_REPOSITORY" \
+              -D static/circt \
+              --clobber
+          fi
+
+          if ! have_all_artifacts; then
+            echo "::error::CIRCT wasm artifacts are missing after release download."
+            exit 1
+          fi
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full UVM browser-worker matrix
+        run: |
+          LOG_DIR="$RUNNER_TEMP/uvm-matrix-logs"
+          mkdir -p "$LOG_DIR"
+          ./scripts/run-uvm-browser-worker-matrix.sh \
+            --full \
+            --retries 3 \
+            --log-dir "$LOG_DIR"
+
+      - name: Upload UVM matrix logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uvm-nightly-logs-${{ github.run_id }}
+          path: ${{ runner.temp }}/uvm-matrix-logs
+          if-no-files-found: ignore
