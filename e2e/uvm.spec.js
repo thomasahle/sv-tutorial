@@ -26,16 +26,17 @@ async function goToLesson(page, lesson) {
 }
 
 async function applySolution(page) {
+  await page.getByTestId('options-button').click();
   const solveBtn = page.getByTestId('solve-button');
-  if (await solveBtn.count() === 0) return;
+  if (await solveBtn.count() === 0) { await page.keyboard.press('Escape'); return; }
 
-  const label = ((await solveBtn.textContent()) ?? '').trim().toLowerCase();
-  if (label === 'reset') {
-    await solveBtn.click();
-    await expect(solveBtn).toHaveText(/solve/i);
+  const label = ((await solveBtn.textContent()) ?? '').trim();
+  if (label === 'Reset to starter') {
+    // Already solved — close menu and return
+    await page.keyboard.press('Escape');
+    return;
   }
   await solveBtn.click();
-  await expect(solveBtn).toHaveText(/reset/i);
 }
 
 async function expectCleanUvmRun(logs) {

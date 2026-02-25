@@ -7,7 +7,7 @@ export default {
   'sv/modules-and-ports':    { title: 'Modules and Ports',                            focus: '/src/adder.sv' },
   'sv/always-comb':          { title: 'always_comb and case',                         focus: '/src/mux.sv' },
   'sv/priority-enc':         { title: 'Priority Encoder',                             focus: '/src/priority_enc.sv' },
-  'sv/always-ff':            { title: 'Flip-Flops with always_ff',                    focus: '/src/sram_core.sv', waveform: 'optional' },
+  'sv/always-ff':            { title: 'Flip-Flops with always_ff',                    focus: '/src/sram_core.sv' },
   'sv/counter':              { title: 'Up-Counter',                                   focus: '/src/counter.sv' },
   'sv/parameters':           { title: 'Parameters and localparam',                    focus: '/src/sram.sv' },
   'sv/packed-structs':       { title: 'Packed Structs and Unions',                    focus: '/src/mem_cmd.sv' },

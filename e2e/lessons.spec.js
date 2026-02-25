@@ -12,6 +12,12 @@ async function goToLesson(page, chapterName, lessonName) {
   await expect(page.getByRole('heading', { level: 2, name: lessonName })).toBeVisible();
 }
 
+/** Open the gear menu then click the solve/reset button inside it. */
+async function clickSolve(page) {
+  await page.getByTestId('options-button').click();
+  await page.getByTestId('solve-button').click();
+}
+
 async function expectInterpretMode(logs) {
   await expect(logs).toContainText('--mode interpret');
   await expect(logs).not.toContainText('--compiled');
@@ -34,14 +40,24 @@ test('solve/reset toggles between solution and starter', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'next' }).click();
 
+  // Open menu and verify initial state
+  await page.getByTestId('options-button').click();
   const solveBtn = page.getByTestId('solve-button');
-  await expect(solveBtn).toHaveText('solve');
+  await expect(solveBtn).toHaveText('Show solution');
 
+  // Apply solution
   await solveBtn.click();
-  await expect(solveBtn).toHaveText('reset');
 
+  // Reopen menu and verify reset state
+  await page.getByTestId('options-button').click();
+  await expect(solveBtn).toHaveText('Reset to starter');
+
+  // Reset
   await solveBtn.click();
-  await expect(solveBtn).toHaveText('solve');
+
+  // Reopen menu and verify back to solve
+  await page.getByTestId('options-button').click();
+  await expect(solveBtn).toHaveText('Show solution');
 });
 
 // ── SystemVerilog Basics ──────────────────────────────────────────────────────
@@ -60,7 +76,7 @@ test('Welcome: run outputs Hello World', async ({ page }) => {
 test('Up-Counter: solution simulates and produces a waveform', async ({ page }) => {
   await goToLesson(page, 'Sequential Logic', 'Up-Counter');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('run-button').click();
 
   const logs = page.getByTestId('runtime-logs');
@@ -87,7 +103,7 @@ test('Modules and Ports: waveform renders after solve and run', async ({ page })
   await page.getByRole('button', { name: 'next' }).click();
   await expect(page.getByTestId('lesson-title')).toHaveText('Modules and Ports');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('run-button').click();
 
   const logs = page.getByTestId('runtime-logs');
@@ -105,9 +121,9 @@ test('Modules and Ports: waveform renders after solve and run', async ({ page })
 // ── SystemVerilog Assertions ──────────────────────────────────────────────────
 
 test('immediate-assert: solution passes assertions', async ({ page }) => {
-  await goToLesson(page, 'Your First Assertion', 'Immediate Assertions');
+  await goToLesson(page, 'Your First Formal Assertion', 'Immediate Assertions');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('verify-button').click();
 
   const logs = page.getByTestId('runtime-logs');
@@ -116,9 +132,9 @@ test('immediate-assert: solution passes assertions', async ({ page }) => {
 });
 
 test('sequence-basics: solution runs without errors', async ({ page }) => {
-  await goToLesson(page, 'Your First Assertion', 'Sequences and Properties');
+  await goToLesson(page, 'Your First Formal Assertion', 'Sequences and Properties');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('verify-button').click();
 
   const logs = page.getByTestId('runtime-logs');

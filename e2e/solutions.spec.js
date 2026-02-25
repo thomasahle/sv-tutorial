@@ -154,10 +154,9 @@ for (const lesson of LESSONS) {
   test(`[${lesson.runner ?? 'sim'}] ${lesson.title}`, async ({ page }) => {
     await goToLesson(page, lesson.chapter, lesson.title);
 
-    const solveBtn = page.getByTestId('solve-button');
-    // If already solved (button shows "reset"), re-apply by clicking reset then solve.
-    // More simply: clicking solve always sets the workspace to the solution.
-    await solveBtn.click();
+    // Open the gear menu then apply the solution.
+    await page.getByTestId('options-button').click();
+    await page.getByTestId('solve-button').click();
 
     const logs = page.getByTestId('runtime-logs');
 

@@ -79,10 +79,14 @@ for (const [index, lesson] of LESSONS.entries()) {
     await expect(page.getByTestId('lesson-title')).toHaveText(lesson.title, { timeout: 10_000 });
 
     // Apply the solution
+    await page.getByTestId('options-button').click();
     const solveBtn = page.getByTestId('solve-button');
     if (await solveBtn.count() > 0) {
-      await solveBtn.click();
-      await expect(solveBtn).toHaveText('reset', { timeout: 5_000 });
+      const label = ((await solveBtn.textContent()) ?? '').trim();
+      if (label !== 'Reset to starter') await solveBtn.click();
+      else await page.keyboard.press('Escape');
+    } else {
+      await page.keyboard.press('Escape');
     }
 
     const logs = page.getByTestId('runtime-logs');

@@ -139,6 +139,89 @@ test('waveform toolbar buttons send correct commands', async ({ page }) => {
   }
 });
 
+test('transition_next selects earliest-transitioning signal, not alphabetically first', async ({ page }) => {
+  // Surfer displays signals alphabetically. For priority-enc the order is:
+  //   grant (idx 0), req (idx 1), valid (idx 2)
+  // But req and valid both transition at t=1 (the first simulation step), while
+  // grant only changes at t=2. So the auto-selected signal should be req or valid,
+  // NOT grant — otherwise transition_next from t=0 skips to a later timestamp.
+  await page.goto('/surfer/index.html#dev');
+  const crashBanner = page.getByText('Sorry, Surfer crashed');
+  let surferBootCrash = false;
+  try {
+    await expect(crashBanner).toBeVisible({ timeout: 3000 });
+    surferBootCrash = true;
+  } catch {
+    surferBootCrash = false;
+  }
+  test.skip(surferBootCrash, 'Surfer crashes in this Playwright environment (WebGL unavailable)');
+
+  await page.goto('/lesson/sv/priority-enc');
+  await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('svt:')) localStorage.removeItem(key);
+    }
+  });
+
+  await page.getByTitle('Editor options').click();
+  await page.getByTestId('solve-button').click();
+  await page.getByTestId('run-button').click();
+
+  await expect(page.getByTestId('runtime-tab-waves')).toBeVisible({ timeout: 90_000 });
+  await page.getByTestId('runtime-tab-waves').click();
+
+  const waveFrame = page.getByTestId('waveform-frame-wrapper');
+  await expect(waveFrame).toHaveAttribute('data-wave-state', 'ready', { timeout: 30_000 });
+
+  // data-selected-signal is set when SetItemSelected succeeds in the polling loop.
+  // If it stays empty, id_of_name never returned a valid item (signals weren't ready).
+  // If it equals 'grant', the wrong signal was selected (alphabetically first ≠ earliest).
+  await expect.poll(
+    () => waveFrame.getAttribute('data-selected-signal'),
+    { timeout: 10_000, message: 'data-selected-signal should be set to a transitioning signal (not grant or empty)' }
+  ).toMatch(/^(req|valid)$/);
+});
+
+test('open-in-surfer button opens Surfer popup and sends VCD', async ({ page }) => {
+  // Intercept blob creation on the main page so we can verify the VCD blob is
+  // prepared for the popup (openInNewWindow creates a fresh blob URL from vcd prop).
+  await page.addInitScript(() => {
+    window._blobTexts = [];
+    const orig = URL.createObjectURL.bind(URL);
+    URL.createObjectURL = function (blob) {
+      const url = orig(blob);
+      if (blob.type === 'text/plain') {
+        blob.text().then((t) => window._blobTexts.push(t));
+      }
+      return url;
+    };
+  });
+
+  await runModulesAndPorts(page);
+  await page.getByTestId('runtime-tab-waves').click();
+
+  const waveFrame = page.getByTestId('waveform-frame-wrapper');
+  await expect(waveFrame).toHaveAttribute('data-wave-state', 'ready', { timeout: 30_000 });
+
+  const openBtn = page.getByTitle('Open in Surfer');
+  await expect(openBtn).toBeEnabled();
+
+  // window.open() fires the 'popup' event on the Playwright context.
+  const popupPromise = page.waitForEvent('popup');
+  await openBtn.click();
+  const popup = await popupPromise;
+
+  // The popup should navigate to the Surfer index page.
+  await popup.waitForURL(/surfer\/index\.html/, { timeout: 10_000 });
+
+  // A VCD blob should have been created for the popup.
+  // VCD files start with "$date" or "$timescale" while scope command files start with "scope_".
+  await expect.poll(
+    () => page.evaluate(() => window._blobTexts.some((t) => t.includes('$var'))),
+    { timeout: 5_000, message: 'Expected a VCD blob to be created for the popup' }
+  ).toBe(true);
+});
+
 test('concurrent-sim SVA assertion signal appears in VCD', async ({ page }) => {
   // Intercept URL.createObjectURL to capture the text of any VCD blob sent to Surfer.
   await page.addInitScript(() => {

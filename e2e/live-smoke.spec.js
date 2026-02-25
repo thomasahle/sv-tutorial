@@ -35,6 +35,7 @@ test('[app] loads and shows lesson navigation', async ({ page }) => {
 
 test('[sim] Welcome — run button produces output, no compile error', async ({ page }) => {
   await goToLesson(page, 'Introduction', 'Welcome');
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('run-button').click();
   const logs = page.getByTestId('runtime-logs');
@@ -43,6 +44,7 @@ test('[sim] Welcome — run button produces output, no compile error', async ({ 
 
 test('[sim] Concurrent Assertions — runtime assertions chapter visible, assertionFail produced', async ({ page }) => {
   await goToLesson(page, 'Runtime Assertions', 'Concurrent Assertions in Simulation');
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('run-button').click();
   const logs = page.getByTestId('runtime-logs');
@@ -52,6 +54,7 @@ test('[sim] Concurrent Assertions — runtime assertions chapter visible, assert
 
 test('[bmc] Immediate Assertions — verify runs z3', async ({ page }) => {
   await goToLesson(page, 'Your First Formal Assertion', 'Immediate Assertions');
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('verify-button').click();
   const logs = page.getByTestId('runtime-logs');
@@ -62,6 +65,7 @@ test('[bmc] Immediate Assertions — verify runs z3', async ({ page }) => {
 
 test('[bmc] Implication — verify runs z3', async ({ page }) => {
   await goToLesson(page, 'Implication & BMC', 'Implication: |-> and |=>');
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('verify-button').click();
   const logs = page.getByTestId('runtime-logs');
@@ -72,6 +76,7 @@ test('[bmc] Implication — verify runs z3', async ({ page }) => {
 
 test('[lec] Logical Equivalence Checking — z3 proves unsat', async ({ page }) => {
   await goToLesson(page, 'Formal Verification', 'Logical Equivalence Checking');
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('verify-button').click();
   const logs = page.getByTestId('runtime-logs');

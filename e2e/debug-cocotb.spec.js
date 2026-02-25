@@ -10,6 +10,7 @@ test('cocotb: debug - check wasmTable', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'cocotb Basics' }).click();
   await page.getByRole('button', { name: /Your First cocotb Test/ }).click();
+  await page.getByTestId('options-button').click();
   await page.getByTestId('solve-button').click();
   await page.getByTestId('run-button').click();
 

@@ -29,7 +29,6 @@ Lessons are defined in a `parts → chapters → lessons` hierarchy and exported
 - `files.a`: starter files (keyed by virtual path like `/src/top.sv`)
 - `files.b`: solution delta (merged onto `a` to produce the solution)
 - `focus`: the default file to show in the editor
-- `waveform`: `'off'` | `'optional'` | `'required'` — controls waveform pane visibility
 - `html`: inline HTML string for the lesson description
 
 ### App State (`src/App.svelte`)

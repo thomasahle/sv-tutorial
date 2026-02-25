@@ -14,6 +14,12 @@ async function goToLesson(page, chapterName, lessonName) {
   await expect(page.getByRole('heading', { level: 2, name: lessonName })).toBeVisible();
 }
 
+/** Open the gear menu then click the solve/reset button inside it. */
+async function clickSolve(page) {
+  await page.getByTestId('options-button').click();
+  await clickSolve(page);
+}
+
 // ── BMC: Bounded Model Checking ───────────────────────────────────────────────
 
 test('BMC: starter code has no assertion → verify does not prove anything', async ({ page }) => {
@@ -31,7 +37,7 @@ test('BMC: starter code has no assertion → verify does not prove anything', as
 test('BMC: solution proves all properties within the bound', async ({ page }) => {
   await goToLesson(page, 'Implication & BMC', 'Bounded Model Checking');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('verify-button').click();
 
   const logs = page.getByTestId('runtime-logs');
@@ -54,7 +60,7 @@ test('BMC: shows only verify button, no run button', async ({ page }) => {
 test('assume property: solution proves property with constraint', async ({ page }) => {
   await goToLesson(page, 'Formal Verification', 'assume property');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('verify-button').click();
 
   const logs = page.getByTestId('runtime-logs');
@@ -67,7 +73,7 @@ test('LEC: only shows verify (LEC) button, no run button', async ({ page }) => {
   await goToLesson(page, 'Formal Verification', 'Logical Equivalence Checking');
 
   await expect(page.getByTestId('verify-button')).toBeVisible();
-  await expect(page.getByTestId('verify-button')).toHaveText('verify (LEC)');
+  await expect(page.getByTestId('verify-button')).toHaveAttribute('aria-label', 'Verify (LEC)');
   await expect(page.getByTestId('run-button')).toHaveCount(0);
 });
 
@@ -86,7 +92,7 @@ test('LEC: buggy Impl is detected as NOT equivalent', async ({ page }) => {
 test('LEC: fixed Impl is proved equivalent to Spec', async ({ page }) => {
   await goToLesson(page, 'Formal Verification', 'Logical Equivalence Checking');
 
-  await page.getByTestId('solve-button').click();
+  await clickSolve(page);
   await page.getByTestId('verify-button').click();
 
   const logs = page.getByTestId('runtime-logs');

@@ -125,10 +125,6 @@ function needsUvmLibrary(files) {
   );
 }
 
-function hasVcdSignalDefinitions(vcdText) {
-  return typeof vcdText === 'string' && /\$var\b/.test(vcdText);
-}
-
 // circt-sim inlines child-instance ports as dotted names (e.g. "dut.sum") into
 // the parent scope alongside the parent wire ("result"). Strip those duplicates
 // so the waveform viewer only shows the canonical wire name.
@@ -1463,8 +1459,7 @@ export class CirctWasmAdapter {
       appendNonZeroExit(logs, 'circt-sim', sim.exitCode, emitLog);
 
       const rawVcdText = simResult.withVcd ? sim.files?.[wavePath] || null : null;
-      const cleanedVcdText = removeInlinedPortsFromVcd(rawVcdText);
-      const vcdText = hasVcdSignalDefinitions(cleanedVcdText) ? cleanedVcdText : null;
+      const vcdText = removeInlinedPortsFromVcd(rawVcdText);
 
       if (typeof onStatus === 'function') onStatus('done');
       return {

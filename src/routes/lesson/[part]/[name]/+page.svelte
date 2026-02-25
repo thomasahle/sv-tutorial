@@ -550,6 +550,7 @@
       <div class="relative flex-shrink-0">
         <button
           onclick={() => (showOptions = !showOptions)}
+          data-testid="options-button"
           class="flex items-center justify-center w-8 h-8 rounded-[7px] hover:bg-surface-2 transition-colors text-muted-foreground {showOptions ? 'bg-surface-2' : ''}"
           aria-label="Editor options" title="Editor options"
         >
@@ -778,6 +779,8 @@
               <button class="wtb-btn" onclick={() => waveformRef?.sendCmd('zoom_out')}  title="Zoom out"    disabled={!waveSignalsReady}>−</button>
               <button class="wtb-btn" onclick={() => waveformRef?.sendCmd('zoom_in')}   title="Zoom in"     disabled={!waveSignalsReady}>+</button>
               <button class="wtb-btn" onclick={() => waveformRef?.sendCmd('zoom_fit')}  title="Zoom to fit" disabled={!waveSignalsReady}>Fit</button>
+              <div class="wtb-sep"></div>
+              <button class="wtb-btn" onclick={() => waveformRef?.openInNewWindow()} title="Open in Surfer" disabled={!waveSignalsReady}>🏄</button>
             </div>
           {/if}
         </div>

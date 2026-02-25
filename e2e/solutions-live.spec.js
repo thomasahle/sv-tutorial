@@ -54,8 +54,8 @@ for (const lesson of LESSONS) {
   test(`[${lesson.runner ?? 'sim'}] ${lesson.title}`, async ({ page }) => {
     await goToLesson(page, lesson.chapter, lesson.title);
 
-    const solveBtn = page.getByTestId('solve-button');
-    await solveBtn.click();
+    await page.getByTestId('options-button').click();
+    await page.getByTestId('solve-button').click();
 
     const logs = page.getByTestId('runtime-logs');
 
