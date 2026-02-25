@@ -36,6 +36,29 @@ async function fetchScriptText(url) {
   }
 }
 
+function normalizeFetchedScriptText(scriptText, jsUrl) {
+  var text = String(scriptText || '');
+  if (!text) return text;
+
+  // Strip UTF-8 BOM if present.
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+
+  // Eval() does not accept hashbang, but some JS wrappers include it.
+  if (text.startsWith('#!')) {
+    var newline = text.indexOf('\n');
+    text = newline === -1 ? '' : text.slice(newline + 1);
+  }
+
+  var trimmed = text.trimStart().toLowerCase();
+  if (trimmed.startsWith('<!doctype') || trimmed.startsWith('<html')) {
+    throw new Error('Tool script resolved to HTML instead of JS: ' + String(jsUrl || ''));
+  }
+
+  return text;
+}
+
 function installPathRequireOnly(pathShim) {
   if (typeof self.require !== 'undefined') return;
   self.require = function(mod) {
@@ -67,6 +90,7 @@ async function loadEmscriptenTool(opts) {
   if (!scriptText) {
     throw new Error('Failed to load tool script: ' + String(jsUrl || ''));
   }
+  scriptText = normalizeFetchedScriptText(scriptText, jsUrl);
   scriptText = injectCallMainExportShim(scriptText);
   var isNoderawfs = !!scriptText && isNoderawfsScript(scriptText);
   var fsBundle = null;
@@ -85,7 +109,12 @@ async function loadEmscriptenTool(opts) {
     installPathRequireOnly(pathShim);
   }
   if (beforeEval) beforeEval();
-  (0, eval)(scriptText);
+  try {
+    (0, eval)(scriptText);
+  } catch (error) {
+    var message = String((error && error.message) || error || 'unknown eval error');
+    throw new Error('Failed to evaluate tool script ' + String(jsUrl || '') + ': ' + message);
+  }
   if (afterEval) afterEval();
 
   return {

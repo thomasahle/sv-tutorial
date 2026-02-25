@@ -252,8 +252,12 @@
 
       for (const url of urls) {
         try {
-          const request = new Request(url, { method: 'GET' });
-          const response = await fetch(request, { cache: 'reload' });
+          const request = new Request(url, {
+            method: 'GET',
+            cache: 'reload',
+            headers: { 'x-svt-offline-refresh': '1' }
+          });
+          const response = await fetch(request);
           if (response.status === 404) {
             skippedMissing += 1;
             continue;

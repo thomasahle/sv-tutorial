@@ -84,17 +84,26 @@ function pickWriteCache(requestUrl) {
   return APP_CACHE;
 }
 
+function shouldBypassReadCache(request) {
+  if (request.cache === 'reload') return true;
+  if (request.headers.get('x-svt-offline-refresh') === '1') return true;
+  return false;
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
   const reqUrl = new URL(req.url);
   if (!/^https?:$/.test(reqUrl.protocol)) return;
+  const bypassReadCache = shouldBypassReadCache(req);
 
   event.respondWith(
     (async () => {
-      const cached = await caches.match(req);
-      if (cached) return cached;
+      if (!bypassReadCache) {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+      }
 
       try {
         const res = await fetch(req);
@@ -114,4 +123,3 @@ self.addEventListener('fetch', (event) => {
     })()
   );
 });
-
