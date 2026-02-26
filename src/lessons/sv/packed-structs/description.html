@@ -2,9 +2,9 @@
               <p>Fields are laid out <strong>MSB-first</strong> in declaration order. You can assign the struct as a whole or access individual fields:</p>
               <pre>mem_cmd_t cmd;
 cmd.we   = 1'b1;
-cmd.addr = 4'd3;                              // field write
+cmd.addr = 4'd3;                             // field write
 cmd = '{we: 1'b1, addr: 4'd3, wdata: 8'd55}; // struct literal
-cmd = 13'b1_0011_00110111;                    // raw bit assignment</pre>
+cmd = 13'b1_0011_00110111;                   // raw bit assignment</pre>
               <p>Open <code>mem_cmd.sv</code>. Inside the <code><dfn data-card="typedef creates a type alias — a new name for an existing type. In SystemVerilog it is most commonly used with enum and struct to give a meaningful name to a bit-vector layout: typedef struct packed {...} mem_cmd_t creates a type called mem_cmd_t that you can use in port declarations and variable definitions. The _t suffix is a convention for type names, borrowed from C. typedef'd types can be exported from packages and imported by any module in the design.">typedef</dfn> struct packed { } mem_cmd_t;</code> skeleton, add the three fields of the SRAM command bus:</p>
               <ul>
                 <li>A single-bit write-enable flag (<code>we</code>)</li>

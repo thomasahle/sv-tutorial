@@ -1,13 +1,19 @@
-              <p>Our SRAM testbench uses a counter like this to step through addresses in burst-write and burst-read sequences — incrementing the address each cycle to fill or verify the entire memory array.</p>
-<p>A counter is the canonical example of sequential logic with state. It uses the same <code>always_ff</code> pattern as a flip-flop, but adds an enable signal and an incrementing expression.</p>
-<p>Open <code>counter.sv</code> and implement an 8-bit up-counter:</p>
+<p>Another thing we can build with <code>always_ff</code> is a counter.</p>
+<p>Our SRAM will use a counter to step through addresses in 
+<dfn data-card="Burst access is a sequence of reads or writes to consecutive addresses, often used in memory interfaces to improve efficiency. A burst-write sequence means writing multiple data words to consecutive addresses in one operation, while a burst-read sequence means reading multiple data words from consecutive addresses in one operation.">
+   burst-write</dfn> and burst-read sequences.
+We will also have two signals <code>en</code> and <code>rst_n</code> to control the counter.
+The counter should increment when <code>en</code> is high, and reset to zero when <code>rst_n</code> is low.
+</p>
+<p>In <code>counter.sv</code> implement an 8-bit up-counter:</p>
 <ul>
-  <li><dfn data-card="Synchronous reset clears the register only on a clock edge (when rst_n is low at posedge clk). This keeps the flip-flop's timing clean — the reset path goes through normal combinational logic before the flip-flop. Asynchronous reset, by contrast, clears the register immediately regardless of the clock, which requires extra care in timing analysis and FPGA implementation.">Synchronous reset</dfn>: when <code>!<dfn data-card="The _n suffix is an RTL naming convention for active-low signals: the signal is asserted (active) when it is 0, not 1. rst_n means reset-active-low — the chip is held in reset while rst_n = 0 and runs normally when rst_n = 1. Active-low resets are common because power-on-reset circuits naturally pull a line low until the supply stabilizes, and because CMOS NOR gates are faster than NAND gates (active-low logic is slightly cheaper in some process nodes).">rst_n</dfn></code>, set <code>count</code> to zero</li>
-  <li>Count up: when <code>en</code> is high, add 1 each cycle</li>
+   <li><dfn data-card="Synchronous reset clears the register only on a clock edge (when rst_n is low at posedge clk). This keeps the flip-flop's timing clean — the reset path goes through normal combinational logic before the flip-flop. Asynchronous reset, by contrast, clears the register immediately regardless of the clock, which requires extra care in timing analysis and FPGA implementation.">Synchronous reset</dfn>: when <code>!<dfn data-card="The _n suffix is an RTL naming convention for active-low signals: the signal is asserted (active) when it is 0, not 1. rst_n means reset-active-low — the chip is held in reset while rst_n = 0 and runs normally when rst_n = 1. Active-low resets are common because power-on-reset circuits naturally pull a line low until the supply stabilizes, and because CMOS NOR gates are faster than NAND gates (active-low logic is slightly cheaper in some process nodes).">rst_n</dfn></code>, set <code>count</code> to zero</li>
+   <li>Count up: when <code>en</code> is high, add 1 each cycle</li>
 </ul>
 <blockquote><p>Notice that <code>else if</code> naturally gives reset higher priority than enable — a common and intentional idiom in RTL.</p></blockquote>
 <h2>Testbench</h2>
 <p>The testbench verifies three behaviors in sequence: counting, holding (enable de-asserted), and resetting. After releasing reset with enable high it uses <code>repeat(5) @(posedge clk);</code> to advance exactly five cycles, then samples <code>count</code>:</p>
 <pre>repeat(5) @(posedge clk);
 #1 $display("after 5 cycles: %0d (expect 5)", count);</pre>
+<p>Here <code>repeat (n) begin ... end</code> is a convenient way to repeat a block of code n times.</p>
 <p>Open the <strong>Waves</strong> tab to see <code>count</code> increment each cycle, freeze when <code>en</code> goes low, and snap back to zero when <code>rst_n</code> asserts.</p>

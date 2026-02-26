@@ -1,4 +1,4 @@
-<p><code>always @(event) begin ... end</code> is block that runs every time a specified event fires.
+<p><code>always @(event) begin ... end</code> is a block that runs every time a specified event fires.
 If the event is a clock edge (e.g. <code>posedge clk</code>) we typically use <code>always_ff</code> instead, where "ff" stands for "flip-flop".
 </p>
 <svg width="300" height="68" viewBox="0 0 300 68" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:10px auto">
@@ -15,18 +15,20 @@ If the event is a clock edge (e.g. <code>posedge clk</code>) we typically use <c
 </svg>
 <p>
 A flip-flop is a 1-bit memory element that captures its input (d) at a clock edge and holds it until the next edge.
-It's easy to model a flip-flop in SystemVerilog using an <code>always_ff</code> block:
+It's easy to model a flip-flop in SystemVerilog using an <code>always_ff</code> block.
+Here, two flip-flops form a 2-stage pipeline — <code>out</code> always lags <code>mem</code> by one cycle:
 <pre>
 always_ff @(posedge clk) begin
-   mem &lt;= d; // on each rising edge, capture d into mem
-   out &lt;= mem; // on the same edge, capture mem into out (the old value of mem)
+   mem &lt;= d;   // on each rising edge, capture d into mem
+   out &lt;= mem; // capture the old value of mem into out
 end
 </pre>
 <blockquote><p>
    We use <strong><dfn data-card="Non-blocking assignment (<=) schedules the update to happen after all right-hand sides in the current time step are evaluated. This means two flip-flops can swap values correctly: a <= b; b <= a; works as expected. Blocking assignment (=) takes effect immediately, like a variable assignment in C — correct for combinational logic but causes races in sequential logic.">non-blocking assignment</dfn></strong> (<code>&lt;=</code>) inside <code>always_ff</code>. All right-hand sides are evaluated first, then all assignments happen simultaneously — this prevents races and models real flip-flop behaviour.</p></blockquote>
 <p>
-SRAM consists entirely of flip-flops.
-However we'll need a slightly more advanced pattern to model memory addresses:
+An SRAM is an array of flip-flops — one per bit — indexed by address.
+We'll need a slightly more advanced pattern to model that array.
+We also use a port <code>we</code> (write enable) to control when writes happen, and a separate port <code>rdata</code> for the read result.
 </p>
 <!-- Timing diagram: write on cycle 1, read request cycle 2, result cycle 3 -->
 <svg width="400" height="210" viewBox="0 0 400 210" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:10px auto">
@@ -69,7 +71,7 @@ However we'll need a slightly more advanced pattern to model memory addresses:
    <line x1="108" y1="196" x2="324" y2="196" stroke="#586469" stroke-width="1.5" marker-start="url(#sff-larr)" marker-end="url(#sff-rarr)" stroke-dasharray="4,3"/>
    <text x="216" y="208" text-anchor="middle" fill="#586469" font-size="12">1-cycle read latency</text>
 </svg>
-<p>Open <code>sram_core.sv</code> and fill in the <code>always_ff</code> body with two statements:</p>
+<p>In <code>sram_core.sv</code> fill in the <code>always_ff</code> body with two statements:</p>
 <ul>
    <li>When <code>we</code> is high, write <code>wdata</code> into <code>mem[addr]</code></li>
    <li>Always register the read: capture <code>mem[addr]</code> into <code>rdata</code></li>

@@ -10,7 +10,7 @@ export default {
   'sv/events':               { title: 'Events',                                        focus: '/src/event_sync.sv' },
   'sv/always-ff':            { title: 'Flip-Flops with always_ff',                    focus: '/src/sram_core.sv' },
   'sv/counter':              { title: 'Up-Counter',                                   focus: '/src/counter.sv' },
-  'sv/parameters':           { title: 'Parameters and localparam',                    focus: '/src/sram.sv' },
+  'sv/parameters':           { title: 'Parameters',                    focus: '/src/sram.sv' },
   'sv/packed-structs':       { title: 'Packed Structs and Unions',                    focus: '/src/mem_cmd.sv' },
   'sv/interfaces':           { title: 'Interfaces and modport',                       focus: '/src/mem_if.sv' },
   'sv/tasks-functions':      { title: 'Tasks and Functions',                          focus: '/src/tb.sv' },
