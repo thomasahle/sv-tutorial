@@ -11,38 +11,49 @@ module tb;
 
   int fail = 0;
 
-  // Clock generator: period = 10 time units (finite repeat for simulator compatibility)
-  initial repeat(200) #5 clk = ~clk;
+  // Clock generator: period = 10 time units
+  always #5 clk = ~clk;
 
   // Connect all ports by name (shorthand: .port matches variable of same name)
   sram_core dut(.*);
 
-  // Write one byte: assert we, drive addr/wdata, wait for rising edge
-  task do_write(input [3:0] a, input [7:0] d);
-    we = 1; addr = a; wdata = d;
-    @(posedge clk); #1;
-    we = 0;
-  endtask
+  initial begin
+    // Write addr=2, data=42
+    we = 1; addr = 4'd2; wdata = 8'd42;
+    @(posedge clk); #1; we = 0;
 
-  // Read one byte and check result; print PASS or FAIL
-  task do_read(input [3:0] a, input [7:0] expected);
-    addr = a; @(posedge clk); #1;
-    if (rdata === expected)
-      $display("PASS  mem[%0d] = %0d", a, rdata);
+    // Write addr=7, data=99
+    we = 1; addr = 4'd7; wdata = 8'd99;
+    @(posedge clk); #1; we = 0;
+
+    // Write addr=0, data=13
+    we = 1; addr = 4'd0; wdata = 8'd13;
+    @(posedge clk); #1; we = 0;
+
+    // Read and check each address (1-cycle read latency)
+    addr = 4'd2; @(posedge clk); #1;
+    if (rdata === 8'd42)
+      $display("PASS  mem[2] = %0d", rdata);
     else begin
-      $display("FAIL  mem[%0d] = %0d  (expected %0d)", a, rdata, expected);
+      $display("FAIL  mem[2] = %0d  (expected 42)", rdata);
       fail++;
     end
-  endtask
 
-  initial begin
-    do_write(4'd2, 8'd42);
-    do_write(4'd7, 8'd99);
-    do_write(4'd0, 8'd13);
+    addr = 4'd7; @(posedge clk); #1;
+    if (rdata === 8'd99)
+      $display("PASS  mem[7] = %0d", rdata);
+    else begin
+      $display("FAIL  mem[7] = %0d  (expected 99)", rdata);
+      fail++;
+    end
 
-    do_read(4'd2, 8'd42);
-    do_read(4'd7, 8'd99);
-    do_read(4'd0, 8'd13);
+    addr = 4'd0; @(posedge clk); #1;
+    if (rdata === 8'd13)
+      $display("PASS  mem[0] = %0d", rdata);
+    else begin
+      $display("FAIL  mem[0] = %0d  (expected 13)", rdata);
+      fail++;
+    end
 
     if (fail == 0) $display("PASS");
     $finish;
