@@ -114,13 +114,37 @@
   export function sendCmd(cmd) {
     const cw = iframeEl?.contentWindow;
     if (!cw) return;
-    // Clicking a toolbar button in the parent page blurs the Surfer iframe, which
-    // causes Surfer to lose its focused-variable state.  Re-send FocusItem before
-    // any command that depends on it so transition_next/prev have a signal to work on.
-    if ((cmd === 'transition_next' || cmd === 'transition_previous') &&
-        _focusedVisibleIdx !== undefined) {
-      surferMsg(cw, { FocusItem: _focusedVisibleIdx });
+
+    if (cmd === 'transition_next' || cmd === 'transition_previous') {
+      // Dispatch a synthetic arrow-key event directly to the Surfer iframe
+      // (same-origin access).  This mirrors what happens when the user presses
+      // ← / → with the iframe focused, and avoids the async race between the
+      // WCP command-file fetch and the iframe-blur event clearing Surfer's
+      // focused-variable state.
+      //
+      // We also re-send FocusItem first so Surfer's focused variable is correct
+      // even if it was cleared by the blur event.  postMessage is async, so we
+      // delay the key dispatch by 50 ms to ensure FocusItem is processed by
+      // Surfer before the keyboard event fires.
+      if (_focusedVisibleIdx !== undefined) {
+        surferMsg(cw, { FocusItem: _focusedVisibleIdx });
+      }
+      const key = cmd === 'transition_next' ? 'ArrowRight' : 'ArrowLeft';
+      setTimeout(() => {
+        const el = iframeEl;
+        if (!el) return;
+        const canvas = el.contentDocument?.getElementById('the_canvas_id');
+        const target = canvas ?? el.contentWindow;
+        if (!target) return;
+        // Create the event in the iframe's realm to avoid cross-realm prototype issues.
+        const IframeKBEvent = el.contentWindow?.KeyboardEvent ?? KeyboardEvent;
+        target.dispatchEvent(
+          new IframeKBEvent('keydown', { key, code: key, bubbles: true, cancelable: true })
+        );
+      }, 50);
+      return;
     }
+
     const url = URL.createObjectURL(new Blob([cmd + '\n'], { type: 'text/plain' }));
     surferMsg(cw, { LoadCommandFileFromUrl: url });
     setTimeout(() => URL.revokeObjectURL(url), 5000);
