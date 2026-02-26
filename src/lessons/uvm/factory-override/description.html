@@ -5,5 +5,9 @@
               <p>Sequences and agents create items through the factory. Because they go through it, you can swap in a specialised subclass — corner-case item, error-injection item, or protocol-variant item — without touching the sequence or agent source.</p>
               <h2>Verifying the override</h2>
               <p><code>mem_item.convert2string()</code> calls <code>get_type_name()</code>, which returns the <em>actual</em> runtime class name. Without the override you'll see <code>[mem_item]</code> with interior addresses. After adding the override you'll see <code>[corner_mem_item]</code> with only boundary addresses (0 or 15).</p>
-              <p>Open <code>mem_test_corner.sv</code> and add the factory override call inside <code>build_phase</code>: replace <code>mem_item</code> with <code>corner_mem_item</code> for all factory-created instances.</p>
-              <blockquote><p>Both the base type and the override type must be registered with the factory via <code>`uvm_object_utils</code>. Check <code>corner_mem_item.sv</code> — it already has the registration macro.</p></blockquote>
+              <p>Two files need completing:</p>
+              <ol>
+                <li>Open <code>corner_mem_item.sv</code> — add the <code>`uvm_object_utils</code> factory registration and override <code>range_c</code> so <code>addr</code> is constrained to only <code>{0, 15}</code></li>
+                <li>Open <code>mem_test_corner.sv</code> — add the factory override call in <code>build_phase</code> to redirect every <code>mem_item::type_id::create()</code> to produce a <code>corner_mem_item</code> instead</li>
+              </ol>
+              <blockquote><p>The base class <code>mem_item</code> declares <code>range_c { addr inside {[1:14]}; }</code>. When a subclass declares a constraint with the same name, it <em>replaces</em> the parent's version. No <code>constraint_mode()</code> call needed — the name collision is the override.</p></blockquote>

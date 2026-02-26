@@ -9,8 +9,9 @@ class mem_driver extends uvm_driver #(mem_item);
   endfunction
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    if (!uvm_config_db #(virtual mem_if)::get(this, "", "vif", vif))
-      `uvm_fatal("NOVIF", "Virtual interface not found")
+    // TODO: retrieve the virtual interface from config_db
+    //       type: virtual mem_if, key: "vif"
+    //       if the get() fails, call `uvm_fatal("NOVIF", "Virtual interface not found")
   endfunction
   task run_phase(uvm_phase phase);
     mem_item req;

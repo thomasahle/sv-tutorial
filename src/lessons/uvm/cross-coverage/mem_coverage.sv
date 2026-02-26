@@ -14,7 +14,9 @@ class mem_coverage extends uvm_subscriber #(mem_item);
       bins reads  = {0};
       bins writes = {1};
     }
-    // TODO: add a cross of cp_addr and cp_we to track every address × operation combination
+    // TODO 1: add addr_x_we cross of cp_addr and cp_we
+    // TODO 2: add ignore_bins to exclude writes to reserved addresses 14 and 15
+    //         hint: binsof(cp_addr.addr) intersect {14, 15} && binsof(cp_we.writes)
   endgroup
 
   function new(string name, uvm_component parent);
@@ -25,5 +27,11 @@ class mem_coverage extends uvm_subscriber #(mem_item);
   function void write(mem_item t);
     item = t;
     mem_cg.sample();
+  endfunction
+
+  function void report_phase(uvm_phase phase);
+    real pct = mem_cg.get_coverage();
+    `uvm_info("COV", $sformatf("Cross coverage: %.1f%%", pct), UVM_LOW)
+    // TODO 3: print PASS if pct == 100.0; otherwise `uvm_error with the percentage
   endfunction
 endclass

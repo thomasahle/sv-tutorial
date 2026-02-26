@@ -1,8 +1,9 @@
 <p>Assertions answer <em>"did something illegal happen?"</em> — functional coverage answers <em>"did we exercise the scenarios we care about?"</em>. Without coverage, passing simulation only means no bugs were triggered by the stimulus you happened to run.</p>
 <p>In UVM, coverage lives in a <strong><code><dfn data-card="uvm_subscriber is a UVM component with a built-in analysis export (uvm_analysis_imp). Extend it to create a coverage collector: override the write() method to sample a covergroup whenever a transaction arrives. Connect the monitor's analysis port to the subscriber's export during connect_phase. The subscriber can then be attached alongside a scoreboard without any changes to the monitor.">uvm_subscriber</dfn></code></strong> — a component with a built-in analysis export. Every transaction written to it calls <code>write()</code>, which samples the covergroup.</p>
-<p>Open <code>mem_coverage.sv</code> and complete the two coverpoints inside <code>mem_cg</code>:</p>
-<ul>
-  <li><strong>cp_addr</strong>: one bin per SRAM address (0–15) — proves every memory location was accessed</li>
-  <li><strong>cp_we</strong>: two bins, one for reads and one for writes</li>
-</ul>
+<p>Open <code>mem_coverage.sv</code> and complete three things:</p>
+<ol>
+  <li>Add <strong>cp_addr</strong> coverpoint — one bin per SRAM address (0–15) — proves every memory location was accessed</li>
+  <li>Add <strong>cp_we</strong> coverpoint — two bins, one for reads and one for writes</li>
+  <li>Complete <strong>report_phase</strong> — call <code>get_coverage()</code> and print <code>PASS</code> if 100%, otherwise a <code>`uvm_error</code> with the actual percentage</li>
+</ol>
 <blockquote><p>Coverage holes are most often found by removing or widening constraints and re-running. If <code>cp_addr</code> misses addresses 12–15, those addresses were never generated — adjust the sequence constraint to cover the full range.</p></blockquote>

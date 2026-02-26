@@ -1,5 +1,20 @@
-<p>Individual coverpoints track each signal independently. <strong>Cross coverage</strong> tracks <em>combinations</em> — it creates a bin for every pair of values from two coverpoints and checks that each combination was seen:</p>
-<p>The cross syntax is simply: <code>name: cross cp1, cp2;</code> — it automatically creates one bin for every combination of bins from the two coverpoints.</p>
-<p>For the SRAM, crossing <code>cp_addr × cp_we</code> produces 32 bins (16 addresses × 2 operations). Any unhit bin is an address that was never read or never written during the test run.</p>
-<p>Open <code>mem_coverage.sv</code>. The two coverpoints are already written. Add a cross of <code>cp_addr</code> and <code>cp_we</code> inside the covergroup.</p>
-<blockquote><p>Cross coverage can grow explosively with more coverpoints or wider bins. It is common to exclude impossible or uninteresting combinations with <code>ignore_bins</code> or <code>illegal_bins</code> to focus coverage effort where it matters.</p></blockquote>
+<p>Individual coverpoints track signals in isolation. <strong>Cross coverage</strong> tracks <em>combinations</em> — it creates a bin for every pair, proving that every address was both read and written:</p>
+<pre>
+  addr \ op  │ read │ write
+  ───────────┼──────┼───────
+   0 – 13    │  ✓   │   ✓     ← 28 required bins
+  14 – 15    │  ✓   │   —     ← writes excluded (reserved)
+</pre>
+<p>The cross syntax creates one bin per combination of bins from two coverpoints:</p>
+<pre>addr_x_we: cross cp_addr, cp_we;</pre>
+<p>That single line creates 32 bins (16 addr × 2 ops). But addresses 14 and 15 are <em>reserved</em> — our sequence never writes them — so those 2 write-bins will always be empty. Instead of letting them fail coverage, exclude them with <code><dfn data-card="binsof(cp.bin) selects a specific set of bins from a coverpoint by name or value. The intersect keyword further filters to only those bins whose values overlap with a given set. Together they let you write precise ignore_bins or illegal_bins for cross coverage — excluding specific combinations without removing the whole coverpoint.">binsof</dfn></code> and <code>intersect</code>:</p>
+<pre>ignore_bins no_write_reserved =
+    binsof(cp_addr.addr) intersect {14, 15} &&
+    binsof(cp_we.writes);</pre>
+<p>Open <code>mem_coverage.sv</code> and complete three things inside the covergroup:</p>
+<ol>
+  <li>Add the <code>addr_x_we</code> cross of <code>cp_addr</code> and <code>cp_we</code></li>
+  <li>Add the <code>ignore_bins</code> for reserved write addresses (14 and 15)</li>
+  <li>Complete <code>report_phase</code> — print PASS at 100%, or a <code>`uvm_error</code> naming which address-operation bins were missed</li>
+</ol>
+<blockquote><p><code>binsof(cp.bin) intersect {values}</code> selects only those bins whose values overlap the set. This is how you surgically exclude specific cross combinations without removing a whole coverpoint.</p></blockquote>

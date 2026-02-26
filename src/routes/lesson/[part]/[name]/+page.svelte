@@ -664,7 +664,8 @@
         <div class="flex-1 min-h-0 flex flex-row">
           <!-- Left pane -->
           <div class="relative min-w-0 overflow-hidden flex flex-col" style="flex: 0 0 {hSplitEditor}%">
-            <div data-testid="split-header-left" class="flex-none flex items-center h-10 px-[0.5rem]">
+            <div data-testid="split-header-left" class="flex-none flex items-center h-10 px-[0.5rem] border-b border-border"
+                 style="background-color: {$darkMode ? '#1e2422' : '#faf7ef'}">
               <span class="font-mono text-[0.8rem] rounded-[10px] border border-teal text-teal bg-tab-selected-bg px-[0.55rem] py-[0.25rem] whitespace-nowrap">{fileA}</span>
             </div>
             <div class="flex-1 min-h-0">
@@ -681,19 +682,19 @@
           </div>
           <!-- Right pane -->
           <div class="flex-1 min-w-0 grid grid-rows-[auto_1fr]">
-            <div data-testid="split-header-right" class="flex items-center gap-2 h-10 px-[0.5rem]">
+            <div data-testid="split-header-right" class="flex items-center gap-2 h-10 px-[0.5rem] border-b border-border"
+                 style="background-color: {$darkMode ? '#1e2422' : '#faf7ef'}">
               <span class="font-mono text-[0.8rem] rounded-[10px] border border-border bg-surface-2 px-[0.55rem] py-[0.25rem] whitespace-nowrap">{fileB}</span>
               <div class="flex-1"></div>
               <div class="flex items-center flex-shrink-0">
                 <button
                   onclick={() => (splitView = false)}
                   class="flex items-center justify-center w-8 h-8 rounded-[7px] hover:bg-surface-2 transition-colors text-muted-foreground"
-                  aria-label="Switch to tab view" title="Switch to tab view"
+                  aria-label="Switch to file tree view" title="Switch to file tree view"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2"/>
-                    <path d="M2 11h20"/>
-                    <path d="M2 7h4v4H2z" fill="currentColor" stroke="none"/>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M9 3v18"/>
                   </svg>
                 </button>
                 {@render optionsButton()}
@@ -704,37 +705,61 @@
         </div>
 
       {:else}
-        <!-- Single tabbed view -->
-        <div class="flex-1 min-h-0 min-w-0 grid grid-rows-[auto_1fr]">
-          <div class="flex items-center gap-2 px-[0.5rem] pt-[0.4rem] pb-[0.3rem]">
-            <div class="flex-1 overflow-x-auto">
-              <div role="tablist" class="flex flex-nowrap gap-[0.35rem] w-max">
-                {#each Object.keys(workspace) as filename}
-                  <button
-                    role="tab"
-                    aria-selected={selectedFile === filename}
-                    onclick={() => (selectedFile = filename)}
-                    class="inline-flex items-center font-mono text-[0.8rem] rounded-[10px] border px-2 py-1 whitespace-nowrap transition-colors {selectedFile === filename ? 'border-teal text-teal bg-tab-selected-bg' : 'border-border bg-surface-2'}"
-                  >{filename}</button>
-                {/each}
-              </div>
+        <!-- File tree + editor view -->
+        <div class="flex-1 min-h-0 min-w-0 flex flex-row">
+
+          <!-- File tree sidebar -->
+          <div class="flex-none w-[140px] border-r border-border overflow-y-auto flex flex-col select-none py-1" role="tablist" aria-label="Files"
+               style="background-color: {$darkMode ? '#1e2422' : '#faf7ef'}">
+            <!-- /src directory header -->
+            <div class="flex items-center gap-1.5 px-3 py-[0.3rem] text-[0.7rem] text-muted-foreground font-mono">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+              </svg>
+              src
             </div>
-            {#if canSplit}
+            <!-- File list -->
+            {#each Object.keys(workspace) as filename}
+              {@const basename = filename.replace(/^\/src\//, '')}
               <button
-                onclick={() => (splitView = true)}
-                class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-[6px] hover:bg-surface-2 transition-colors text-muted-foreground"
-                aria-label="Split editor" title="Split editor"
+                role="tab"
+                aria-selected={selectedFile === filename}
+                onclick={() => (selectedFile = filename)}
+                title={basename}
+                class="flex items-center gap-1.5 pl-[1.25rem] pr-2 py-[0.3rem] text-[0.78rem] font-mono text-left w-full transition-colors {selectedFile === filename ? 'bg-tab-selected-bg text-teal' : 'text-foreground hover:bg-surface-2'}"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg>
+                <svg class="flex-shrink-0 opacity-40" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span class="truncate">{basename}</span>
               </button>
-            {/if}
-            {@render optionsButton()}
+            {/each}
           </div>
 
-          <div class="relative min-h-0 overflow-hidden">
-            <CodeEditor filePath={selectedFile} vimMode={$vimMode} darkMode={$darkMode} value={workspace[selectedFile] || ''} onchange={onEdit} diagnostics={diagnosticsByFile[selectedFile] ?? []} />
-            {@render runButtons()}
+          <!-- Editor area -->
+          <div class="flex-1 min-w-0 flex flex-col min-h-0">
+            <!-- Thin top strip for buttons -->
+            <div data-testid="file-tree-toolbar" class="flex-none flex items-center justify-end px-[0.5rem] h-10 border-b border-border"
+                 style="background-color: {$darkMode ? '#1e2422' : '#faf7ef'}">
+              {#if canSplit}
+                <button
+                  onclick={() => (splitView = true)}
+                  class="flex items-center justify-center w-8 h-8 rounded-[7px] hover:bg-surface-2 transition-colors text-muted-foreground"
+                  aria-label="Split editor" title="Split editor"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg>
+                </button>
+              {/if}
+              {@render optionsButton()}
+            </div>
+            <!-- Editor -->
+            <div class="relative flex-1 min-h-0 overflow-hidden">
+              <CodeEditor filePath={selectedFile} vimMode={$vimMode} darkMode={$darkMode} value={workspace[selectedFile] || ''} onchange={onEdit} diagnostics={diagnosticsByFile[selectedFile] ?? []} />
+              {@render runButtons()}
+            </div>
           </div>
+
         </div>
       {/if}
     </div>
@@ -790,7 +815,7 @@
                {activeRuntimeTab === 'waves' ? 'hidden' : 'flex-1 min-h-0'}"
       >
         {#if logs.length === 0}
-          <div class="text-muted-foreground opacity-60 select-none">press ▶ to run</div>
+          <div class="text-muted-foreground select-none">press ▶ to run</div>
         {:else}
           <div class="flex flex-col gap-2">
             {#each logs as entry}

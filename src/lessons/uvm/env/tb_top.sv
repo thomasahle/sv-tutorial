@@ -4,6 +4,7 @@ import uvm_pkg::*;
 `include "mem_driver.sv"
 `include "mem_monitor.sv"
 `include "mem_scoreboard.sv"
+`include "mem_coverage.sv"
 `include "mem_agent.sv"
 `include "mem_seq.sv"
 `include "mem_env.sv"

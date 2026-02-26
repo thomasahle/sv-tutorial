@@ -1,8 +1,16 @@
-<p>A <strong><dfn data-card="A UVM sequence generates a stream of transaction items. Its body() task runs when started on a sequencer. The sequence uses a three-step handshake: start_item (request the driver), randomize/configure the item, finish_item (hand it to the driver and wait for completion). Sequences are objects, not components — they have no phases and must be started explicitly from a test's run_phase.">sequence</dfn></strong> generates a stream of transactions. Its <code>body()</code> task runs when the sequence is started on a <dfn data-card="The sequencer (uvm_sequencer) is the arbitration point between sequences and the driver. Multiple sequences can be started on the same sequencer; the sequencer decides which one gets access to the driver at any given time. The driver pulls the next item from the sequencer using get_next_item() and signals completion with item_done().">sequencer</dfn>. The three-step handshake with the driver is:</p>
+<p>A <strong><dfn data-card="A UVM sequence generates a stream of transaction items. Its body() task runs when started on a sequencer. The sequence uses a three-step handshake: start_item (request the driver), randomize/configure the item, finish_item (hand it to the driver and wait for completion). Sequences are objects, not components — they have no phases and must be started explicitly from a test's run_phase.">sequence</dfn></strong> generates a stream of transactions by handing items to a <dfn data-card="The sequencer (uvm_sequencer) is the arbitration point between sequences and the driver. Multiple sequences can be started on the same sequencer; the sequencer decides which one gets access to the driver at any given time. The driver pulls the next item from the sequencer using get_next_item() and signals completion with item_done().">sequencer</dfn> one at a time. The three-step handshake is:</p>
+<pre>
+  sequence                     sequencer / driver
+  ────────                     ──────────────────
+  start_item(item)  ────────►  (blocks until driver is free)
+  randomize(item)              (item being configured)
+  finish_item(item) ────────►  driver gets item, drives DUT
+                   ◄────────   item_done() unblocks finish_item
+</pre>
 <ol>
   <li><code>start_item(item)</code> — request access; blocks until the sequencer grants it</li>
   <li>Randomize or configure the item while holding the grant</li>
   <li><code>finish_item(item)</code> — hand the item to the driver; blocks until the driver calls <code>item_done()</code></li>
 </ol>
-<p>Open <code>mem_seq.sv</code> and complete the <code>body()</code> task. The driver and agent are already provided — focus on the sequence side of the handshake.</p>
+<p>Open <code>mem_seq.sv</code> and complete the <code>body()</code> task. A logging driver is already provided — each item you hand off will be printed, so you can see the handshake working immediately.</p>
 <blockquote><p>Sequences are objects (<code>uvm_object</code>), not components — they have no phases. Start them explicitly from a test's <code>run_phase</code> with <code>seq.start(sequencer_handle)</code>.</p></blockquote>

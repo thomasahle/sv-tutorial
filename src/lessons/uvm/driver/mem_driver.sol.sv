@@ -22,6 +22,7 @@ class mem_driver extends uvm_driver #(mem_item);
       vif.wdata <= req.wdata;
       @(posedge vif.clk);
       req.rdata = vif.rdata;
+      `uvm_info("DRV", $sformatf("drove %s → rdata=%0d", req.convert2string(), req.rdata), UVM_MEDIUM)
       seq_item_port.item_done();
     end
   endtask

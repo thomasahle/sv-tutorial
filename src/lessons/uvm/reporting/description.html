@@ -6,7 +6,15 @@
                 <li><code>`uvm_error(ID, msg)</code> — always printed; increments error count; simulation continues</li>
                 <li><code>`uvm_fatal(ID, msg)</code> — always printed; immediately calls <code>$finish</code></li>
               </ul>
-              <p>A UVM run starts with <code>run_test("test_name")</code> from the static top-level module. UVM constructs the named test class and drives it through a sequence of <strong><dfn data-card="UVM phases are a sequence of named execution stages that all components go through in order: build_phase (create child components), connect_phase (wire TLM ports), run_phase (drive simulation time), check_phase (final scoreboard checks), report_phase (print summary). Build and connect phases are top-down and bottom-up respectively; run_phase is concurrent across all components.">phases</dfn></strong>. The critical phase is <code>run_phase</code> — the only time-consuming one. Simulation does not advance past it until all components drop their <strong><dfn data-card="Objections are UVM's mechanism for keeping simulation alive during run_phase. Any component can raise an objection to prevent the phase from ending. When all raised objections have been dropped, UVM ends the run_phase and moves to the next phase. A component that forgets to drop its objection will cause the simulation to hang forever.">objections</dfn></strong>.</p>
+              <p>A UVM run starts with <code>run_test("test_name")</code> from the static top-level module. UVM constructs the named test class and drives it through a fixed sequence of <strong><dfn data-card="UVM phases are a sequence of named execution stages that all components go through in order: build_phase (create child components), connect_phase (wire TLM ports), run_phase (drive simulation time), check_phase (final scoreboard checks), report_phase (print summary). Build and connect phases are top-down and bottom-up respectively; run_phase is concurrent across all components.">phases</dfn></strong>:</p>
+<pre>
+  build_phase     ← create child components (top-down)
+  connect_phase   ← wire TLM ports (bottom-up)
+  run_phase       ← drive simulation time  ← you are here
+  check_phase     ← final scoreboard checks
+  report_phase    ← print summary
+</pre>
+              <p><code>run_phase</code> is the only time-consuming phase. Simulation does not advance past it until all components drop their <strong><dfn data-card="Objections are UVM's mechanism for keeping simulation alive during run_phase. Any component can raise an objection to prevent the phase from ending. When all raised objections have been dropped, UVM ends the run_phase and moves to the next phase. A component that forgets to drop its objection will cause the simulation to hang forever.">objections</dfn></strong>.</p>
               <p>Open <code>my_test.sv</code> and complete the <code>run_phase</code> body:</p>
               <ol>
                 <li>Raise an objection to hold simulation open</li>

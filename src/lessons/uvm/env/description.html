@@ -1,11 +1,23 @@
-              <p>The <strong>environment</strong> (<code>uvm_env</code>) is the container that assembles agents and scoreboards. Its two key phases:</p>
+              <p>The <strong>environment</strong> (<code>uvm_env</code>) assembles every component you've built into one connected testbench. Two phases do all the work:</p>
               <ul>
                 <li><code>build_phase</code> — creates child components top-down with <code>type_id::create("name", this)</code></li>
                 <li><code>connect_phase</code> — wires <dfn data-card="TLM (Transaction-Level Modeling) ports are UVM's mechanism for passing data objects between components without tight coupling. A uvm_analysis_port on the monitor connects to a uvm_analysis_imp on the scoreboard; when the monitor calls write(item), the scoreboard's write() method is called automatically. TLM decouples producers from consumers — you can add a second subscriber without changing the monitor.">TLM</dfn> ports between components bottom-up</li>
               </ul>
-              <p>Open <code>mem_env.sv</code> and complete both phases. All other components are already provided — this is the final connection that makes the full testbench run end-to-end:</p>
+<pre>
+  mem_env
+  ├─ mem_agent
+  │    ├─ uvm_sequencer
+  │    ├─ mem_driver  ──► DUT (sram)
+  │    └─ mem_monitor ◄── DUT (sram)
+  │         └─ ap (analysis_port)
+  │              ├──► mem_scoreboard.analysis_export
+  │              └──► mem_coverage.analysis_export
+  ├─ mem_scoreboard
+  └─ mem_coverage
+</pre>
+              <p>The monitor's <code>ap</code> feeds <em>both</em> the scoreboard and the coverage collector — a single <code>connect()</code> call per subscriber, no changes to the monitor. Open <code>mem_env.sv</code> and complete both phases:</p>
               <ul>
-                <li>In <code>build_phase</code>: create the agent and scoreboard using <code>type_id::create("name", this)</code></li>
-                <li>In <code>connect_phase</code>: wire the monitor's analysis port to the scoreboard's analysis export</li>
+                <li>In <code>build_phase</code>: create <code>agent</code>, <code>scbd</code>, and <code>cov</code> using <code>type_id::create</code></li>
+                <li>In <code>connect_phase</code>: connect the monitor's analysis port to both the scoreboard and coverage exports</li>
               </ul>
-              <blockquote><p>The <code>this</code> argument in <code>create("name", this)</code> sets the UVM hierarchy parent. This determines the component's path in the tree, which scopes config_db lookups and reporting output.</p></blockquote>
+              <blockquote><p>The <code>this</code> argument in <code>create("name", this)</code> sets the UVM hierarchy parent. This determines the component's path in the tree, which scopes <code>config_db</code> lookups and reporting output.</p></blockquote>

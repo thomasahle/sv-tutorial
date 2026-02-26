@@ -3,27 +3,20 @@ import uvm_pkg::*;
 
 class mem_coverage extends uvm_subscriber #(mem_item);
   `uvm_component_utils(mem_coverage)
-
   mem_item item;
-
   covergroup mem_cg;
-    // TODO: add cp_addr coverpoint with one bin per address (0–15)
-    // TODO: add cp_we coverpoint with separate bins for reads and writes
+    cp_addr: coverpoint item.addr { bins addr[] = {[0:15]}; }
+    cp_we:   coverpoint item.we   { bins reads = {0}; bins writes = {1}; }
   endgroup
-
   function new(string name, uvm_component parent);
     super.new(name, parent);
     mem_cg = new();
   endfunction
-
   function void write(mem_item t);
     item = t;
     mem_cg.sample();
   endfunction
-
   function void report_phase(uvm_phase phase);
-    real pct = mem_cg.get_coverage();
-    `uvm_info("COV", $sformatf("Functional coverage: %.1f%%", pct), UVM_LOW)
-    // TODO: if pct == 100.0, print "PASS: all bins hit"; otherwise print a uvm_error listing the percentage
+    `uvm_info("COV", $sformatf("Functional coverage: %.1f%%", mem_cg.get_coverage()), UVM_LOW)
   endfunction
 endclass

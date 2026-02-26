@@ -1,4 +1,13 @@
-<p>Random stimulus without a stopping condition is unpredictable — you may run far more cycles than needed, or stop before all bins are hit. <strong><dfn data-card="Coverage-driven verification (CDV) is a methodology where the test keeps generating random stimulus until a coverage target is met. Instead of running a fixed number of transactions, the test loop queries coverage progress (get_coverage()) and stops when all bins are hit. This ensures both randomness (finding unexpected bugs) and completeness (every scenario was exercised).">Coverage-driven verification</dfn></strong> closes this loop: the test keeps generating stimulus until coverage reaches its target, then stops.</p>
+<p>Random stimulus without a stopping condition is unpredictable — you may run far more cycles than needed, or stop before all bins are hit. <strong><dfn data-card="Coverage-driven verification (CDV) is a methodology where the test keeps generating random stimulus until a coverage target is met. Instead of running a fixed number of transactions, the test loop queries coverage progress (get_coverage()) and stops when all bins are hit. This ensures both randomness (finding unexpected bugs) and completeness (every scenario was exercised).">Coverage-driven verification</dfn></strong> closes this loop:</p>
+<pre>
+  ┌─────────────────────────────────────────────────┐
+  │  while coverage &lt; 100%                          │
+  │    generate random sequence                      │
+  │    drive SRAM → check scoreboard → sample cov   │
+  │    log current coverage %                        │
+  └─────────────────────────────────────────────────┘
+          coverage == 100% → done
+</pre>
 <p>Query progress using <code>get_coverage()</code> on the covergroup object:</p>
 <pre>env.cov.mem_cg.get_coverage()  // returns 0.0 to 100.0</pre>
 <p>Open <code>mem_test.sv</code>. Replace the single <code>seq.start()</code> call with a <code>while</code> loop that keeps creating and running sequences until <code>mem_cg</code> coverage reaches 100%. Log the current coverage after each sequence run.</p>

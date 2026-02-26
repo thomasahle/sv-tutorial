@@ -1,9 +1,20 @@
               <p>The <strong><dfn data-card="The UVM monitor passively samples DUT signals and reconstructs completed transactions from what it observes. It never drives the DUT — it only reads. Monitors broadcast each captured transaction to any connected subscribers via a uvm_analysis_port. This separation means the same monitor can feed both a scoreboard and a coverage collector simultaneously.">monitor</dfn></strong> passively observes DUT signals and broadcasts completed transactions via a <code><dfn data-card="uvm_analysis_port is a one-to-many broadcast port. The monitor calls write(item) on it; every connected subscriber (scoreboard, coverage collector) receives the same item. The monitor doesn't know how many subscribers exist — it just broadcasts. Subscribers connect their uvm_analysis_imp (import) to the port during connect_phase.">uvm_analysis_port</dfn></code>. It does not drive anything.</p>
-              <p>The <strong>scoreboard</strong> subscribes using a <code>uvm_analysis_imp</code> and a <code>write()</code> method. Every time the monitor broadcasts a transaction, <code>write()</code> is called automatically — no polling required.</p>
-              <p>The SRAM scoreboard maintains a <strong><dfn data-card="Shadow memory (or reference model) is a software copy of what the hardware memory should contain, maintained in parallel with the DUT. On each write transaction, the scoreboard updates its shadow at the same address. On each read, it compares the DUT's rdata against the shadow's value. Any mismatch reveals a hardware bug. This pattern generalizes to any stateful DUT: FIFOs, register files, caches.">shadow memory</dfn></strong> — a software model of what the hardware should contain. On each transaction:</p>
+              <p>The <strong>scoreboard</strong> maintains a <strong><dfn data-card="Shadow memory (or reference model) is a software copy of what the hardware memory should contain, maintained in parallel with the DUT. On each write transaction, the scoreboard updates its shadow at the same address. On each read, it compares the DUT's rdata against the shadow's value. Any mismatch reveals a hardware bug. This pattern generalizes to any stateful DUT: FIFOs, register files, caches.">shadow memory</dfn></strong> — a software model of what the SRAM should contain — and checks every read against it:</p>
+<pre>
+  driver writes addr=3, data=42
+       │                        │
+       ▼                        ▼
+  DUT SRAM  [3]=42        shadow[3]=42   ← scoreboard tracks this
+       │
+  driver reads addr=3
+       │                        │
+       ▼                        ▼
+  DUT rdata=42    compare ══► shadow[3]=42   PASS ✓
+  DUT rdata=99    compare ══► shadow[3]=42   FAIL ✗
+</pre>
+              <p>The scoreboard subscribes using a <code>uvm_analysis_imp</code>. Every time the monitor broadcasts a transaction, its <code>write()</code> method is called automatically. Open <code>mem_scoreboard.sv</code> and complete <code>write()</code>:</p>
               <ul>
-                <li><strong>Write</strong>: update the shadow at <code>item.addr</code> with <code>item.wdata</code></li>
-                <li><strong>Read</strong>: compare <code>item.rdata</code> to <code>shadow[item.addr]</code> and report pass or fail</li>
+                <li><strong>Write transaction</strong>: update <code>shadow[item.addr]</code> with <code>item.wdata</code></li>
+                <li><strong>Read transaction</strong>: compare <code>item.rdata</code> to <code>shadow[item.addr]</code> — increment <code>pass_count</code> or <code>fail_count</code> and log accordingly</li>
               </ul>
-              <p>Open <code>mem_scoreboard.sv</code> and complete the <code>write()</code> function body.</p>
-              <blockquote><p>The analysis port is one-to-many: the monitor does not know how many subscribers are connected. Attach a coverage collector alongside the scoreboard by connecting both to the same port — the monitor code does not change.</p></blockquote>
+              <blockquote><p>The analysis port is one-to-many: the monitor does not know how many subscribers are connected. You can attach a coverage collector alongside the scoreboard by connecting both to the same port — the monitor code does not change at all.</p></blockquote>

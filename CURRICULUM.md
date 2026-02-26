@@ -190,33 +190,33 @@ Flag numbers identify the weak dimension(s): 1=Concept Focus, 2=Starter Calibrat
 ### Chapter: UVM Foundations
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `uvm/reporting` | The First UVM Test | ✅ | 21/27 ⚠️2,4 | `sv/modules-and-ports`, `sv/interfaces` | `uvm_component`, `uvm_test`, `` `uvm_info/warning/error ``, severity levels, `build_phase`/`run_phase`, objections |
-| `uvm/seq-item` | Sequence Items | ✅ | 22/27 ⚠️2 | `uvm/reporting`, `sv/packed-structs` | `uvm_sequence_item`, `` `uvm_object_utils ``, `rand` fields, constraints, `convert2string` |
+| `uvm/reporting` | The First UVM Test | ✅ | 25/27 ⚠️4,5 | `sv/modules-and-ports`, `sv/interfaces` | `uvm_component`, `uvm_test`, `` `uvm_info/warning/error ``, severity levels, `build_phase`/`run_phase`, objections |
+| `uvm/seq-item` | Sequence Items | ✅ | 26/27 ⚠️9 | `uvm/reporting`, `sv/packed-structs` | `uvm_sequence_item`, `` `uvm_object_utils ``, `rand` fields, constraints, `convert2string` |
 
 ### Chapter: Stimulus
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `uvm/sequence` | Sequences | ✅ | 23/27 ⚠️2 | `uvm/seq-item` | `uvm_sequence`, `body()`, `start_item`/`randomize`/`finish_item` loop |
-| `uvm/driver` | The Driver | ✅ | 23/27 ⚠️2 | `uvm/sequence`, `sv/interfaces`, `sv/always-ff` | `uvm_driver`, `get_next_item`/`item_done`, virtual interface driving, 1-cycle latency capture |
-| `uvm/constrained-random` | Constrained-Random Scenarios | ✅ | 21/27 ⚠️2,5 | `uvm/seq-item` | `dist`, inline `randomize() with {}`, `constraint_mode()` |
+| `uvm/sequence` | Sequences | ✅ | 27/27 | `uvm/seq-item` | `uvm_sequence`, `body()`, `start_item`/`randomize`/`finish_item` loop |
+| `uvm/driver` | The Driver | ✅ | 24/27 ⚠️1,4,5 | `uvm/sequence`, `sv/interfaces`, `sv/always-ff` | `uvm_driver`, `get_next_item`/`item_done`, virtual interface driving, 1-cycle latency capture |
+| `uvm/constrained-random` | Constrained-Random Scenarios | ✅ | 24/27 ⚠️1,4,9 | `uvm/seq-item` | `dist`, inline `randomize() with {}`, `constraint_mode()` |
 
 ### Chapter: Checking
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `uvm/monitor` | Monitor and Scoreboard | ✅ | 23/27 ⚠️2 | `uvm/driver`, `uvm/seq-item` | `uvm_monitor`, `uvm_analysis_port`, `write()`, `uvm_scoreboard`, shadow memory |
-| `uvm/env` | Environment and Test | ✅ | 24/27 ⚠️2 | `uvm/monitor` | `uvm_env`, `uvm_agent`, analysis port → scoreboard wiring |
+| `uvm/monitor` | Monitor and Scoreboard | ✅ | 25/27 ⚠️1,4 | `uvm/driver`, `uvm/seq-item` | `uvm_monitor`, `uvm_analysis_port`, `write()`, `uvm_scoreboard`, shadow memory |
+| `uvm/env` | Environment and Test | ✅ | 26/27 ⚠️4 | `uvm/monitor` | `uvm_env`, `uvm_agent`, analysis port → scoreboard wiring |
 
 ### Chapter: Functional Coverage
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `uvm/covergroup` | Functional Coverage | ✅ | 24/27 ⚠️2 | `uvm/monitor`, `sv/covergroup-basics` | functional coverage in UVM, `uvm_subscriber`, sampling transactions |
-| `uvm/cross-coverage` | Cross Coverage | ✅ | 23/27 ⚠️2,8 | `uvm/covergroup`, `sv/cross-coverage` | cross in UVM context, `addr × we` 2D coverage |
-| `uvm/coverage-driven` | Coverage-Driven Verification | ✅ | 24/27 ⚠️2 | `uvm/cross-coverage` | coverage-driven loop, `get_coverage()` exit condition |
+| `uvm/covergroup` | Functional Coverage | ✅ | 25/27 ⚠️4,9 | `uvm/monitor`, `sv/covergroup-basics` | functional coverage in UVM, `uvm_subscriber`, sampling transactions |
+| `uvm/cross-coverage` | Cross Coverage | ✅ | 27/27 | `uvm/covergroup`, `sv/cross-coverage` | cross in UVM context, `addr × we` 2D coverage |
+| `uvm/coverage-driven` | Coverage-Driven Verification | ✅ | 26/27 ⚠️4 | `uvm/cross-coverage` | coverage-driven loop, `get_coverage()` exit condition |
 
 ### Chapter: Advanced UVM
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `uvm/factory-override` | Factory Overrides | ✅ | 24/27 ⚠️2 | `uvm/seq-item` | `uvm_factory`, `type_id::set_type_override`, corner-case testing via type substitution |
+| `uvm/factory-override` | Factory Overrides | ✅ | 24/27 ⚠️2,7,9 | `uvm/seq-item` | `uvm_factory`, `type_id::set_type_override`, corner-case testing via type substitution |
 | `uvm/virtual-seq` | Virtual Sequences | 💡 | — | `uvm/env` | `uvm_virtual_sequencer`, coordinating stimulus across multiple agents |
 | `uvm/ral` | Register Abstraction Layer (RAL) | 💡 | — | `uvm/driver` | `uvm_reg_block`, `uvm_reg`, frontdoor/backdoor register access |
 

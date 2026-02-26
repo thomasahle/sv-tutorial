@@ -43,6 +43,7 @@
         borderRight:     `1px solid ${dark ? '#2d3532' : '#d5cbb2'}`,
         color:           dark ? '#5a7a72' : '#8a8070',
       },
+      '.cm-lineNumbers .cm-gutterElement': { padding: '0 0 0 8px' },
       '.cm-activeLineGutter': { backgroundColor: dark ? '#232e2b' : '#e8e4da' },
       '.cm-activeLine':       { backgroundColor: dark ? 'rgba(61,181,185,0.07)' : 'rgba(13,111,114,0.05)' },
       '.cm-selectionBackground, ::selection': {
@@ -54,7 +55,7 @@
       '&.cm-focused': { outline: 'none' },
       '.cm-scroller': { overflow: 'auto', height: '100%' },
       // Lint gutter
-      '.cm-gutter-lint': { width: '1.1em' },
+      '.cm-gutter-lint': { width: '0' },
       '.cm-lint-marker-error': { color: '#e05555' },
       '.cm-lint-marker-warning': { color: '#c97a20' },
       // Wavy underlines
@@ -112,6 +113,7 @@
             themeCompartment.of(makeTheme(darkMode)),
             highlightCompartment.of(darkMode ? syntaxHighlighting(darkHighlight) : []),
             vimCompartment.of(vimExtension),
+            EditorView.contentAttributes.of({ 'aria-label': filePath ? `Code editor: ${filePath}` : 'Code editor' }),
             EditorView.updateListener.of(u => {
               if (u.docChanged) onchange(u.state.doc.toString());
             }),

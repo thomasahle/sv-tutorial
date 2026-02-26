@@ -25,4 +25,13 @@ class mem_coverage extends uvm_subscriber #(mem_item);
     item = t;
     mem_cg.sample();
   endfunction
+
+  function void report_phase(uvm_phase phase);
+    real pct = mem_cg.get_coverage();
+    `uvm_info("COV", $sformatf("Functional coverage: %.1f%%", pct), UVM_LOW)
+    if (pct == 100.0)
+      `uvm_info("COV", "PASS: all coverage bins hit", UVM_LOW)
+    else
+      `uvm_error("COV", $sformatf("FAIL: coverage only %.1f%% — some bins were not hit", pct))
+  endfunction
 endclass
