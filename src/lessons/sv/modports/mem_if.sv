@@ -8,4 +8,7 @@ interface mem_if (input logic clk);
     return $sformatf("we=%0b addr=%0h wdata=%0h rdata=%0h",
                      we, addr, wdata, rdata);
   endfunction
+
+  // TODO: add modport initiator — testbench side: drives we/addr/wdata, reads clk and rdata
+  // TODO: add modport target   — SRAM side: reads commands, drives rdata
 endinterface

@@ -79,7 +79,7 @@ export const parts = [
       { title: 'Introduction',          lessons: [L('sv/welcome'), L('sv/modules-and-ports'), L('sv/data-types'), L('sv/always-comb')] },
       { title: 'Sequential Logic',      lessons: [L('sv/events'), L('sv/always-ff'), L('sv/counter')] },
       { title: 'Data Types',            lessons: [L('sv/parameters'), L('sv/packed-structs')] },
-      { title: 'Interfaces & Procedures', lessons: [L('sv/interfaces'), L('sv/tasks-functions')] },
+      { title: 'Interfaces & Procedures', lessons: [L('sv/interfaces'), L('sv/modports'), L('sv/tasks-functions')] },
       { title: 'State Machines',        lessons: [L('sv/enums'), L('sv/fsm')] },
       { title: 'Covergroups',            lessons: [L('sv/covergroup-basics'), L('sv/coverpoint-bins'), L('sv/cross-coverage')] },
     ],

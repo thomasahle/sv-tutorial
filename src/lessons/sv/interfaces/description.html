@@ -1,16 +1,42 @@
-              <p>An <strong><dfn data-card="An interface is a named bundle of signals (and optionally logic and tasks) that can be passed as a single port between modules. Interfaces eliminate the tedium of threading dozens of wires through a hierarchy and make the connection point between modules self-documenting. They're especially useful for standard bus protocols.">interface</dfn></strong> bundles related signals into a single named port. Instead of passing each SRAM signal — <code>clk</code>, <code>we</code>, <code>addr</code>, <code>wdata</code>, <code>rdata</code> — between modules one by one, both the design and testbench connect through one handle:</p>
-              <pre>module sram (mem_if.target bus);
+<p>As structs allow us to group fields together,
+<strong>interfaces</strong> group signals into a named bundle that can be passed as a single port:</p>
+<pre>interface &lt;name&gt; ([input|output] &lt;type&gt; &lt;port&gt;, ...);
+    &lt;type&gt;       &lt;signal&gt;;
+    &lt;type&gt; [N:0] &lt;signal&gt;;
+    ...
+    function &lt;type&gt; &lt;name&gt;(); ... endfunction
+endinterface</pre>
+<p>Concretely, our SRAM bus becomes:</p>
+<pre>interface mem_if (input logic clk);
+    logic        we;
+    logic [3:0]  addr;
+    logic [7:0]  wdata;
+    logic [7:0]  rdata;
+endinterface</pre>
+<p>Instead of passing each SRAM signal — <code>clk</code>, <code>we</code>, <code>addr</code>, <code>wdata</code>, <code>rdata</code> — between modules one by one, both the design and testbench connect through one handle:</p>
+<pre>module sram (mem_if bus);
   always_ff @(posedge bus.clk) begin
     if (bus.we) mem[bus.addr] &lt;= bus.wdata;
     bus.rdata &lt;= mem[bus.addr];
   end
 endmodule</pre>
-              <p>A <strong><dfn data-card="A modport (module port) declaration inside an interface defines a restricted view of the interface's signals from one side of the connection. It lists which signals that side can drive (input/output from the module's perspective) and which it can only read. This catches wiring errors at compile time — if the SRAM tries to drive addr, the modport makes it a type error.">modport</dfn></strong> restricts which signals each side may drive. The <code>.target</code> suffix enforces that the SRAM can only drive <code>rdata</code> — it cannot accidentally write to <code>addr</code> or <code>wdata</code>.</p>
-              <p>Open <code>mem_if.sv</code> and add two <code>modport</code> declarations:</p>
-              <ul>
-                <li><code>initiator</code> — the testbench side: it drives <code>we</code>, <code>addr</code>, <code>wdata</code> and reads back <code>rdata</code></li>
-                <li><code>target</code> — the SRAM side: it reads commands and drives <code>rdata</code></li>
-              </ul>
-              <blockquote><p>In Part 3 the UVM driver holds a <code><dfn data-card="A virtual interface is a handle (reference) to an interface instance. Classes in SystemVerilog have no ports and can't be directly connected to signals, but a virtual interface bridges the gap: the testbench module creates the actual interface wires, then passes a virtual interface handle into the class-based UVM components via the config_db. The class can then drive and sample the real signals through the handle.">virtual mem_if</dfn></code> — a reference to the interface instance created in <code>tb_top</code>. The <code>virtual</code> keyword is what lets a class-based component (which has no ports) reach down into the actual signal wires to drive the SRAM.</p></blockquote>
-              <h2>Testbench</h2>
-              <p>The solution testbench instantiates the interface and passes it as the sole port to the DUT. Both sides then access signals through the interface handle. The SRAM's 1-cycle registered read is clearly visible: drive <code>we</code> and <code>addr</code> on one cycle, then read <code>rdata</code> on the next.</p>
+<p>Signals are accessed with dot notation — <code>bus.addr</code>, <code>bus.rdata</code> — just like struct fields.</p>
+
+<h2>Functions inside interfaces</h2>
+<p>An interface can also contain <strong>functions</strong> that operate on its signals.
+The function body has direct access to the interface's own signals — no extra argument needed.
+These functions are not synthesisable and live only in testbenches and simulation models:</p>
+<pre>function string sprint();
+    return $sformatf("we=%0b addr=%0h wdata=%0h rdata=%0h",
+                     we, addr, wdata, rdata);
+endfunction</pre>
+<p>Any module that holds the interface calls it as <code>bus.sprint()</code>.</p>
+<p>Open <code>mem_if.sv</code> and implement <code>sprint()</code> so the testbench can log each transaction.</p>
+
+<blockquote><p><strong>Are interfaces like classes?</strong>
+They share the idea of bundling data with methods, but interfaces are hardware: their members are real wires that change in simulation time.
+They don't support inheritance, polymorphism, or <code>new()</code>.
+Think of an interface as a struct that defines a physical connector, with optional helper functions for testbench use.</p></blockquote>
+
+<h2>Testbench</h2>
+<p>The testbench creates the interface instance and passes it to both the SRAM and the initial block. After each write it calls <code>bus.sprint()</code> to log the bus state, then reads back and checks the result.</p>

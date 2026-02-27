@@ -8,6 +8,7 @@
   import { completedSlugs } from '$lib/stores/completed.js';
   import { cloneFiles, mergeFiles, filesEqual, topNameFromFocus } from '$lib/lesson-utils.js';
   import { termCard } from '$lib/actions/term-card.js';
+  import { highlightCode } from '$lib/actions/highlight-code.js';
   import CodeEditor from '$lib/components/CodeEditor.svelte';
   import WaveformViewer from '$lib/components/WaveformViewer.svelte';
 
@@ -475,7 +476,7 @@
   <article bind:this={lessonArticleEl} style="flex: 0 0 {hSplit}%; min-width: 200px"
            class="bg-surface border border-border rounded-[14px] shadow-app min-h-0 flex flex-col p-[0.9rem] gap-3 overflow-y-auto [scrollbar-gutter:stable] max-narrow:rounded-none max-narrow:border-x-0 max-narrow:border-t-0">
     <h2 data-testid="lesson-title" class="m-0 text-[1.15rem] font-bold leading-tight text-foreground">{lesson.title}</h2>
-    <div class="lesson-body" use:termCard={{ onShow: showCard, onHide: hideCard }}>
+    <div class="lesson-body" use:termCard={{ onShow: showCard, onHide: hideCard }} use:highlightCode={lesson.html}>
       {@html lesson.html}
     </div>
     <div class="mt-auto flex flex-col gap-3">
@@ -667,10 +668,10 @@
           </div>
           <!-- Drag handle -->
           <div role="separator" aria-orientation="vertical"
-               class="flex-none w-[0.7rem] flex items-center justify-center cursor-col-resize select-none group"
-               style="touch-action:none"
+               class="flex-none w-3 relative cursor-col-resize select-none group"
+               style="touch-action:none; background-color:{$darkMode ? '#1e2422' : '#faf7ef'}"
                onpointerdown={startEditorHResize}>
-            <div class="w-[2px] h-8 rounded-full bg-border group-hover:bg-teal transition-colors"></div>
+            <div class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border group-hover:bg-teal transition-colors"></div>
           </div>
           <!-- Right pane -->
           <div class="flex-1 min-w-0 grid grid-rows-[auto_1fr]">

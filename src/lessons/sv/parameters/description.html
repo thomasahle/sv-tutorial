@@ -1,11 +1,25 @@
-              <p>Hard-coding widths like <code>[7:0]</code> and <code>[3:0]</code> locks a module to a single size. <strong><dfn data-card="Parameters are compile-time constants that can be overridden at instantiation, making a module generic. They're similar to C++ template parameters. SystemVerilog has two kinds: parameter (can be overridden) and localparam (fixed within the module). Parameters let you write one SRAM module and reuse it at 256×8, 4096×32, or any other configuration.">Parameters</dfn></strong> let you write the SRAM once and instantiate it at any depth or width. The parameter block goes before the port list:</p>
-              <pre>module sram #(parameter int DEPTH = 16, parameter int WIDTH = 8) (
+<p>
+So far we've been writing arrays and vectors with fixed widths, like <code>[7:0]</code>.
+Later we will discuss include dynamic arrays, <code>arr[]</code>, associative arrays, <code>arr[string]</code>, and queues, <code>int q[$]</code>,
+which add more flexibility.
+However, these are not synthesizable.
+Instead we will use compile-time <strong>parameters</strong> to create flexible, reusable modules:
+<pre>module sram #(parameter int DEPTH = 16, ...) (
   // ... ports ...
-);</pre>
-              <p><code><dfn data-card="$clog2(n) computes the ceiling base-2 logarithm: the smallest integer k such that 2^k ≥ n. $clog2(16) = 4, $clog2(256) = 8, $clog2(10) = 4. It is evaluated at compile time, so it is safe inside port declarations and parameter expressions. It is the standard way to derive address width from a depth parameter — if depth changes from 16 to 1024, the address port automatically grows from 4 to 10 bits with no manual update.">$clog2</dfn>(DEPTH)</code> is a built-in system function that computes the minimum number of address bits needed for a given depth — no manual calculation required. Override the defaults at instantiation:</p>
-              <pre>sram #(.DEPTH(8), .WIDTH(4))    u_small(...);
+); ... endmodule</pre>
+</p>
+<p>Parameters specified at instantiation:
+<pre>sram #(.DEPTH(8),   .WIDTH(4))  u_small(...);
 sram #(.DEPTH(256), .WIDTH(16)) u_large(...);</pre>
-              <p>Open <code>sram.sv</code>. Add the parameter block to the module header, then replace the three hardcoded widths with their parameter-derived equivalents: use <code>$clog2(DEPTH)</code> for the address port and <code>WIDTH</code> for the data ports and memory array.</p>
-              <blockquote><p>Always use <code>$clog2</code> for address widths derived from depth parameters — it automatically adjusts when the depth changes, so the address bus is always exactly the right size.</p></blockquote>
-              <h2>Testbench</h2>
-              <p>The solution testbench instantiates the same module <em>twice</em> with different parameters to demonstrate the power of parameterization: an 8-deep × 4-bit SRAM and a 256-deep × 16-bit SRAM, from a single RTL source.</p>
+</p>
+<p>
+We can apply some system functions, like
+<code><dfn data-card="$clog2(n) computes the ceiling base-2 logarithm: the smallest integer k such that 2^k ≥ n. $clog2(16) = 4, $clog2(256) = 8, $clog2(10) = 4. It is evaluated at compile time, so it is safe inside port declarations and parameter expressions. It is the standard way to derive address width from a depth parameter — if depth changes from 16 to 1024, the address port automatically grows from 4 to 10 bits with no manual update.">$clog2</dfn></code>
+and <code><dfn data-card="$bits(n) computes the number of bits needed to represent n distinct values: the smallest integer k such that 2^k > n. $bits(16) = 4, $bits(256) = 8, $bits(10) = 4. It is evaluated at compile time, so it is safe inside port declarations and parameter expressions. It is the standard way to derive address width from a depth parameter — if depth changes from 16 to 1024, the address port automatically grows from 4 to 10 bits with no manual update.">$bits</dfn></code>
+at compile time.
+We can use this to compute the minimum number of address bits needed for a given depth.</p>
+<p>Task: Add parametrization to <code>sram.sv</code>.
+Add the parameter block to the module header, then replace the three hardcoded widths with their parameter-derived equivalents: use <code>$clog2(DEPTH)</code> for the address port and <code>WIDTH</code> for the data ports and memory array.</p>
+<blockquote><p>Always use <code>$clog2</code> for address widths derived from depth parameters — it automatically adjusts when the depth changes, so the address bus is always exactly the right size.</p></blockquote>
+<h2>Testbench</h2>
+<p>The solution testbench instantiates the same module <em>twice</em> with different parameters to demonstrate the power of parameterization: an 8-deep × 4-bit SRAM and a 256-deep × 16-bit SRAM, from a single RTL source.</p>

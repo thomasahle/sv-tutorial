@@ -8,27 +8,18 @@ module tb;
   int fail = 0;
 
   initial begin
-    // Write address 4 with data 88
     bus.we = 1; bus.addr = 4'd4; bus.wdata = 8'd88;
     @(posedge clk); #1;
-    $display("wrote:  %s", bus.sprint());
     bus.we = 0;
 
-    // Read back — 1-cycle registered latency
-    bus.addr = 4'd4;
-    @(posedge clk); #1;
-    $display("read:   %s", bus.sprint());
+    bus.addr = 4'd4; @(posedge clk); #1;
+    $display("mem[4] = %0d (expect 88)", bus.rdata);
     if (bus.rdata !== 8'd88) fail++;
 
-    // Write address 11 with data 200
     bus.we = 1; bus.addr = 4'd11; bus.wdata = 8'd200;
     @(posedge clk); #1;
-    $display("wrote:  %s", bus.sprint());
-    bus.we = 0;
-
-    bus.addr = 4'd11;
-    @(posedge clk); #1;
-    $display("read:   %s", bus.sprint());
+    bus.we = 0; bus.addr = 4'd11; @(posedge clk); #1;
+    $display("mem[11] = %0d (expect 200)", bus.rdata);
     if (bus.rdata !== 8'd200) fail++;
 
     if (fail == 0) $display("PASS");

@@ -15,6 +15,10 @@ module tb;
   int fail = 0;
 
   initial begin
+    // addr must be $clog2(DEPTH) bits wide
+    if ($bits(u_small.addr) !== 3) fail++;
+    if ($bits(u_large.addr) !== 8) fail++;
+
     // Write and read on the 8×4 instance
     we4=1; addr4=3'd5; wdata4=4'hA; @(posedge clk); #1;
     we4=0; addr4=3'd5; @(posedge clk); #1;

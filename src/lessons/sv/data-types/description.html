@@ -44,10 +44,35 @@
 <h2>The <code>$isunknown()</code> system function</h2>
 <p><code>$isunknown(expr)</code> returns <code>1</code> if any bit of <code>expr</code> is <code>X</code> or <code>Z</code>. It lets a testbench explicitly check that a <code>logic</code> signal is carrying unknown — which is exactly what you want to verify after writing to a 4-state type.</p>
 
+<h2>Arrays</h2>
+<p>SystemVerilog has two array syntaxes. The placement of the dimension brackets determines whether you get a packed bit-vector or an unpacked array of independent elements.</p>
+
+<table style="border-collapse:collapse;width:100%;font-size:0.9em;margin:0.5em 0">
+  <thead><tr style="background:var(--teal-50,#e6f5f5)">
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--border-color,#ccc)">Syntax</th>
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--border-color,#ccc)">Kind</th>
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--border-color,#ccc)">What <code>[0]</code> means</th>
+    <th style="padding:4px 8px;text-align:left;border:1px solid var(--border-color,#ccc)">Use for</th>
+  </tr></thead>
+  <tbody>
+    <tr><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)"><code>logic [7:0] x</code></td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">packed vector</td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">bit 0 of x (1 bit)</td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">RTL signals, data paths</td></tr>
+    <tr><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)"><code>logic [7:0] x [8]</code></td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">unpacked array</td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">element 0 (8 bits)</td><td style="padding:4px 8px;border:1px solid var(--border-color,#ccc)">memories, lookup tables</td></tr>
+  </tbody>
+</table>
+
+<p><strong><dfn data-card="Packed arrays place dimension brackets before the variable name. All bits are laid out contiguously, forming one large bit-vector. You can read any contiguous slice with [hi:lo] or a single bit with [n]. Packed arrays are fully synthesizable and are the standard syntax for RTL signals — logic [7:0] is already a 1-D packed array.">Packed</dfn> dimensions</strong> go <em>before</em> the variable name. The bits are contiguous — it is one big bit-vector you can slice with <code>[hi:lo]</code> or bit-select with <code>[n]</code>. This is the syntax you already know: <code>logic [7:0]</code> is an 8-bit packed array.</p>
+
+<p><strong><dfn data-card="Unpacked arrays place dimension brackets after the variable name, like C arrays. Each element is a separate storage location. The SRAM memory array logic [WIDTH-1:0] mem [0:DEPTH-1] is an unpacked array: addr selects the element, and [WIDTH-1:0] is that element's packed width. Unpacked arrays of logic are synthesizable; unpacked arrays of int or other 2-state types are testbench-only.">Unpacked</dfn> dimensions</strong> go <em>after</em> the variable name, like a C array. Each element is its own independent storage location. The SRAM memory from earlier uses exactly this: <code>logic [WIDTH-1:0] mem [0:DEPTH-1]</code>. The address <code>addr</code> selects an element; <code>[WIDTH-1:0]</code> is each element's packed width.</p>
+
+<blockquote><p>Mixing up the sides is a common bug. <code>logic [7:0] mem</code> is a scalar; <code>mem[0]</code> is a 1-bit bit-select. <code>logic [7:0] mem [4]</code> is an unpacked array; <code>mem[0]</code> is a full 8-bit element. The simulation will not refuse to compile either form — it silently does something different.</p></blockquote>
+
+<p>Testbench code can also use <dfn data-card="Dynamic arrays (T arr[]) are sized at runtime with new[n] and can be resized later. They are testbench-only — not synthesizable. Use them when the size of a collection is not known at compile time.">dynamic arrays</dfn> (<code>int arr[]</code>, sized with <code>new[n]</code>) and <dfn data-card="Queues (T q[$]) are like a double-ended queue. Elements are added with push_back and removed with pop_front. Queues are testbench-only — not synthesizable. They are commonly used for scoreboards and ordered stimulus lists.">queues</dfn> (<code>int q[$]</code>, with <code>push_back</code>/<code>pop_front</code>), but those are not synthesizable and are covered in later lessons.</p>
+
 <h2>Exercise</h2>
-<p>Open <code>data_types.sv</code>. The module has two wrong type declarations:</p>
+<p>Open <code>data_types.sv</code>. The module has three wrong type declarations:</p>
 <ul>
   <li><code>count</code> is declared as <code>bit [31:0]</code> — an unsigned 32-bit type that can't hold negative numbers. Change it to <code>int</code>.</li>
   <li><code>data</code> is declared as <code>bit [7:0]</code> — a 2-state type that silently drops <code>X</code> to <code>0</code>. Change it to <code>logic [7:0]</code>.</li>
+  <li><code>mem</code> is declared as <code>logic [7:0] mem</code> — a scalar, so <code>mem[0]</code> is just bit 0. Add <code>[4]</code> <em>after</em> <code>mem</code> to make it an unpacked array of four bytes.</li>
 </ul>
-<p>Run the simulation before and after — you should see two FAIL lines change to two OK lines and then <code>PASS</code>.</p>
+<p>Run the simulation before and after — you should see three FAIL lines change to three OK lines and then <code>PASS</code>.</p>

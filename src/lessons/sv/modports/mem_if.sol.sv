@@ -8,4 +8,7 @@ interface mem_if (input logic clk);
     return $sformatf("we=%0b addr=%0h wdata=%0h rdata=%0h",
                      we, addr, wdata, rdata);
   endfunction
+
+  modport initiator(output we, addr, wdata, input clk, rdata);
+  modport target   (input  we, addr, wdata, output rdata);
 endinterface

@@ -1,0 +1,27 @@
+<pre>interface &lt;name&gt; ([input|output] &lt;type&gt; &lt;port&gt;, ...);
+    // Signal declarations
+    &lt;type&gt;       &lt;signal&gt;;
+    &lt;type&gt; [N:0] &lt;signal&gt;;
+    ...
+    // Modport declarations
+    modport &lt;name&gt; (output &lt;signals&gt;, input &lt;signals&gt;);
+    modport &lt;name&gt; (input  &lt;signals&gt;, output &lt;signals&gt;);
+endinterface</pre>
+<p>Without restrictions, any module connected to an interface can drive any signal —
+including signals it shouldn't touch.
+A testbench could accidentally drive <code>rdata</code>; the SRAM could accidentally drive <code>addr</code>.
+<strong><dfn data-card="A modport (module port) declaration inside an interface defines a restricted view of the interface's signals from one side of the connection. It lists which signals that side can drive (output) and which it can only read (input), from the module's perspective. This catches wiring mistakes at compile time rather than as silent runtime bugs.">Modports</dfn></strong> fix this by giving each side a restricted view:</p>
+<pre>modport initiator(output we, addr, wdata, input clk, rdata);
+modport target   (input  we, addr, wdata, output rdata);</pre>
+<p>The port qualifier <code>.target</code> then enforces that the SRAM can only drive <code>rdata</code>:</p>
+<pre>module sram (mem_if.target bus);   // compile error if sram writes bus.addr
+  ...
+endmodule</pre>
+<p>If <code>sram</code> tried to assign <code>bus.addr</code>, the tool would catch it as a type error at compile time — not a silent mismatch discovered in waveforms.</p>
+<p>Open <code>mem_if.sv</code> and add the two <code>modport</code> declarations.
+Without them, the <code>mem_if.target</code> port in <code>sram</code> will fail to resolve.</p>
+
+<blockquote><p>In Part 3 the UVM driver holds a <code><dfn data-card="A virtual interface is a handle (reference) to an interface instance. Classes in SystemVerilog have no ports and can't be directly connected to signals, but a virtual interface bridges the gap: the testbench module creates the actual interface wires, then passes a virtual interface handle into the class-based UVM components via the config_db. The class can then drive and sample the real signals through the handle.">virtual mem_if</dfn></code> — a reference to the interface instance created in <code>tb_top</code>. The <code>virtual</code> keyword is what lets a class-based component (which has no ports) reach down into the actual signal wires to drive the SRAM.</p></blockquote>
+
+<h2>Testbench</h2>
+<p>The testbench drives the bus without a modport qualifier — the unqualified form is still legal on the initiator side. Once the modports are in place, the SRAM's <code>.target</code> port compiles, and the write-then-read sequence confirms the 1-cycle registered latency.</p>

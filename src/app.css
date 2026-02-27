@@ -180,6 +180,25 @@
     padding: 0.1em 0.35em;
   }
 
+  /* Syntax highlight token colours — overridden for dark mode below */
+  .lesson-body {
+    --syn-keyword: #0d6f72;
+    --syn-comment: #8a8070;
+    --syn-string:  #2d7a3a;
+    --syn-number:  #c17d2a;
+    --syn-meta:    #8a36a0;
+    --syn-def:     #8a36a0;
+  }
+
+  html.dark .lesson-body {
+    --syn-keyword: #7ac4ff;
+    --syn-comment: #577067;
+    --syn-string:  #7ecfa0;
+    --syn-number:  #f0a070;
+    --syn-meta:    #b794f6;
+    --syn-def:     #b794f6;
+  }
+
   /* Fenced code blocks */
   .lesson-body pre {
     background: var(--color-surface-2);

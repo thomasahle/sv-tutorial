@@ -6,6 +6,8 @@
 <p>Every design needs a <strong><dfn data-card="A testbench is a SystemVerilog module written purely for simulation — it is never synthesized into hardware. It instantiates the design under test (DUT), drives its inputs with stimulus, and checks that the outputs match expected values. Testbenches can range from a simple initial block to a full UVM environment.">testbench</dfn></strong> (<code>tb.sv</code>) — a separate module that drives inputs and checks outputs. It is never synthesized; it only runs in simulation.</p>
 <p>The testbench <em>instantiates</em> the <dfn data-card="DUT (Design Under Test) — the module being verified. In simulation, the testbench wraps the DUT, connecting its ports to stimulus generators and output checkers. In formal verification, the tool itself exercises all possible inputs.">design under test</dfn> (the <code>adder</code>) and connects its ports by name:</p>
 <pre>adder dut(.a(a), .b(b), .sum(result));</pre>
+<p>In a language like python this would be</p>
+<pre>dut = adder(a=a, b=b, sum=result)</pre>
 <p>An <code>initial</code> block runs once at time zero. Here it sets <code>a = 10</code> and <code>b = 32</code>, then after a 1-unit delay prints the result with <code>$display</code>.</p>
 <p>After running the code, you should see the correct sum of <code>42</code> (<code>0x2a</code>) in the Waves tab:</p>
 <p><img src="waves.png" alt="Adder waveform" style="max-width:100%; border-radius:6px;"></p>

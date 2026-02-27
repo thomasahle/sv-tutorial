@@ -5,6 +5,7 @@ interface mem_if (input logic clk);
   logic [7:0]  wdata;
   logic [7:0]  rdata;
 
-  // TODO: add modport initiator — testbench side: drives we/addr/wdata, reads rdata
-  // TODO: add modport target   — SRAM side: reads commands, drives rdata
+  // TODO: implement sprint() — return a formatted string showing the current
+  //       signal values using $sformatf
+  // function string sprint(); ... endfunction
 endinterface

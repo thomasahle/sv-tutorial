@@ -1,16 +1,44 @@
-              <p>A <strong><dfn data-card="A packed struct maps named fields onto a single contiguous bit-vector, with no gaps or padding. The struct as a whole can be treated as a plain logic [N:0] — you can assign it, compare it, or wire it through a port. Fields are laid out MSB-first in declaration order. Contrast with an unpacked struct, which is an abstract data structure that can't be directly wired to hardware ports.">packed struct</dfn></strong> maps named fields onto a contiguous bit-vector. This makes it ideal for command buses where the write-enable, address, and data travel together as a single signal.</p>
-              <p>Fields are laid out <strong>MSB-first</strong> in declaration order. You can assign the struct as a whole or access individual fields:</p>
-              <pre>mem_cmd_t cmd;
-cmd.we   = 1'b1;
-cmd.addr = 4'd3;                             // field write
-cmd = '{we: 1'b1, addr: 4'd3, wdata: 8'd55}; // struct literal
-cmd = 13'b1_0011_00110111;                   // raw bit assignment</pre>
-              <p>Open <code>mem_cmd.sv</code>. Inside the <code><dfn data-card="typedef creates a type alias — a new name for an existing type. In SystemVerilog it is most commonly used with enum and struct to give a meaningful name to a bit-vector layout: typedef struct packed {...} mem_cmd_t creates a type called mem_cmd_t that you can use in port declarations and variable definitions. The _t suffix is a convention for type names, borrowed from C. typedef'd types can be exported from packages and imported by any module in the design.">typedef</dfn> struct packed { } mem_cmd_t;</code> skeleton, add the three fields of the SRAM command bus:</p>
-              <ul>
-                <li>A single-bit write-enable flag (<code>we</code>)</li>
-                <li>A 4-bit address (<code>addr</code>) for a 16-entry SRAM</li>
-                <li>An 8-bit write-data bus (<code>wdata</code>)</li>
-              </ul>
-              <blockquote><p>This is the command bus for our memory chip. In Part 3 the UVM driver will assemble a <code>mem_cmd_t</code> from a sequence item and drive it onto the interface every clock cycle.</p></blockquote>
-              <h2>SRAM design</h2>
-              <p><code>sram_cmd.sv</code> imports the <dfn data-card="A SystemVerilog package is a named namespace for sharing type definitions, functions, parameters, and tasks across multiple modules without copy-pasting. Declare types once in a package; any module can access them with 'import pkg_name::*;' or use the scoped form 'pkg_name::type_name'. Packages are similar to C++ namespaces or Python modules. In this design, mem_pkg exports mem_cmd_t so both the DUT and the testbench use the identical struct definition.">package</dfn> and uses <code>cmd.we</code>, <code>cmd.addr</code>, and <code>cmd.wdata</code> by name. After you add the fields the design compiles and the testbench exercises writes and reads via both struct literals and raw bit assignments.</p>
+<p>
+<strong><dfn data-card="A packed struct maps named fields onto a single contiguous bit-vector, with no gaps or padding. The struct as a whole can be treated as a plain logic [N:0] — you can assign it, compare it, or wire it through a port. 
+There are also unpacked structs, which give the compiler more flexibility on how data is laid out in memory, but they are not synthesizable and are mostly used for testbench data structures.">Packed structs</dfn></strong>
+are simple data structures for packing multiple fields into a single bit-vector.
+We can use them to pack related signals, like (write-enable, address, and data) commands into a single port.
+<p>
+You define strucs with:
+</p>
+<pre>typedef struct packed {
+    logic        we;
+    logic [3:0]  addr;
+    ...
+} my_struct_t;</pre>
+<p>
+You instantiate them with:
+</p>
+<pre>my_struct_t var;
+var.we = 1'b1;
+var.addr = 4'd3;</pre>
+or with struct literals:
+<pre>var = '{we: 1'b1, addr: 4'd3};</pre>
+<blockquote><p>Notice the <code>'{}</code> syntax for struct literals.
+The notation <code>{a, b, c}</code> means bit concatenation.
+E.g. we can write <code>logic [4:0] var = {we, addr}</code>,
+but it is less readable.
+   </p></blockquote>
+<p>
+Fields are laid out
+<dfn data-card="Most Significant Bit first (MSB-first) means that the leftmost bit of a multi-bit vector is the most significant, and the rightmost bit is the least significant.">
+MSB-first
+</dfn>
+in declaration order.
+You can even assign them with raw bit patterns:
+</p>
+<pre>var = 13'b1_0011_00110111;</pre>
+<p>Open <code>mem_cmd.sv</code>. Inside the <code><dfn data-card="typedef creates a type alias — a new name for an existing type. In SystemVerilog it is most commonly used with enum and struct to give a meaningful name to a bit-vector layout: typedef struct packed {...} mem_cmd_t creates a type called mem_cmd_t that you can use in port declarations and variable definitions. The _t suffix is a convention for type names, borrowed from C. typedef'd types can be exported from packages and imported by any module in the design.">typedef</dfn> struct packed { } mem_cmd_t;</code> skeleton, add the three fields of the SRAM command bus:</p>
+<ul>
+   <li>A single-bit write-enable flag (<code>we</code>)</li>
+   <li>A 4-bit address (<code>addr</code>) for a 16-entry SRAM</li>
+   <li>An 8-bit write-data bus (<code>wdata</code>)</li>
+</ul>
+<blockquote><p>This is the command bus for our memory chip. In Part 3 the UVM driver will assemble a <code>mem_cmd_t</code> from a sequence item and drive it onto the interface every clock cycle.</p></blockquote>
+<h2>SRAM design</h2>
+<p><code>sram_cmd.sv</code> imports the <dfn data-card="A SystemVerilog package is a named namespace for sharing type definitions, functions, parameters, and tasks across multiple modules without copy-pasting. Declare types once in a package; any module can access them with 'import pkg_name::*;' or use the scoped form 'pkg_name::type_name'. Packages are similar to C++ namespaces or Python modules. In this design, mem_pkg exports mem_cmd_t so both the DUT and the testbench use the identical struct definition.">package</dfn> and uses <code>cmd.we</code>, <code>cmd.addr</code>, and <code>cmd.wdata</code> by name. After you add the fields the design compiles and the testbench exercises writes and reads via both struct literals and raw bit assignments.</p>

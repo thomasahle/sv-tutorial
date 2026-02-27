@@ -46,6 +46,8 @@ Does the description motivate the concept, scaffold new syntax, and fit on scree
 - **2** — Explains mechanics clearly but motivation is thin, some new syntax is left unexplained, or the description is too long
 - **1** — Reference-doc style; student doesn't know why they're learning this; no connection to the larger project; new syntax is dropped with no explanation
 
+**Convention:** When a lesson introduces a new syntax construct (module, interface, modport, task, etc.), open the description with an abstract template using angle-bracket placeholders (`&lt;name&gt;`, `&lt;signals&gt;`, `N`, `...`) *before* showing the concrete SRAM example. This gives the student a generalizable mental model rather than just a single instance to memorise.
+
 ---
 
 ### 4. Progression

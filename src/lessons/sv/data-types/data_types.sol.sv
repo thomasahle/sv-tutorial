@@ -1,6 +1,7 @@
 module top;
-  int         count; // 2-state signed 32-bit — for testbench counters and integers
-  logic [7:0] data;  // 4-state 8-bit — RTL signals that must propagate X
+  int         count;      // 2-state signed 32-bit — for testbench counters and integers
+  logic [7:0] data;       // 4-state 8-bit — RTL signals that must propagate X
+  logic [7:0] mem [4];    // unpacked array of 4 bytes — element [i] is 8 bits wide
 
   int fail = 0;
 
@@ -18,6 +19,15 @@ module top;
     if ($isunknown(data)) $display("data  = X     OK");
     else begin
       $display("FAIL data: 0x%02h is not X — use logic [7:0], not bit [7:0]", data);
+      fail++;
+    end
+
+    // An unpacked array element must hold a full byte, not just one bit
+    mem[0] = 8'hAB;
+    mem[1] = 8'h12;
+    if (mem[0] === 8'hAB && mem[1] === 8'h12) $display("mem[]  = {AB,12}  OK");
+    else begin
+      $display("FAIL mem: mem[0] is only 1 bit wide — add [4] after the name to make it an array");
       fail++;
     end
 
