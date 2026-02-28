@@ -3,7 +3,7 @@
 # Usage: ./scripts/check-circt-issues.sh [--loop]
 #   --loop  : run every 5 minutes until interrupted (default: check once)
 
-set -euo pipefail
+set -uo pipefail
 
 ISSUES=(8 9 10 11 12 13)
 BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
@@ -11,7 +11,7 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
     --jq '.[] | select(.number | IN(8,9,10,11,12,13)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
-    2>/dev/null | sort -t'|' -k1,1n
+    2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
@@ -33,7 +33,7 @@ check_once() {
     prev=$(cat "$BASELINE_FILE")
     if [[ "$current" != "$prev" ]]; then
       echo "⚡ CHANGES DETECTED since last check:"
-      diff <(echo "$prev") <(echo "$current") | grep '^[<>]' | while IFS= read -r line; do
+      diff <(echo "$prev") <(echo "$current") 2>/dev/null | grep '^[<>]' | while IFS= read -r line; do
         local num state comments updated
         IFS='|' read -r num state comments updated <<< "${line:2}"
         echo "  Issue #$num: state=$state comments=$comments updated=$updated"

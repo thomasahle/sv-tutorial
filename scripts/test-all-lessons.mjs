@@ -8,7 +8,7 @@
  *
  * Runners:
  *   sv/, sva/ sim  — circt-verilog (LLHD IR) + fresh circt-sim per lesson
- *   uvm/           — circt-verilog (LLHD IR + --uvm-path) + fresh circt-sim-vpi
+ *   uvm/           — circt-verilog (LLHD IR + --uvm-path) + fresh circt-sim (includes VPI)
  *   sva/ bmc       — circt-verilog (HW IR, no --ir-llhd) + circt-bmc
  *                    (exit-code check only; Z3 not bundled so sat/unsat unknown)
  *   cocotb/        — cocotb_test.simulator.run with icarus (Python subprocess)
@@ -19,7 +19,7 @@
  *
  * Design notes:
  *   - circt-verilog is loaded once and reused (compilation is stateless).
- *   - circt-sim / circt-sim-vpi are reloaded per lesson — global state leaks
+ *   - circt-sim is reloaded per lesson — global state leaks
  *     between callMain invocations; V8 caches the WASM binary so subsequent
  *     loads are fast (~1-3 s after the first cold load of ~30 s).
  *   - UVM lessons: all source files are staged to a temp dir with canonical
@@ -216,7 +216,7 @@ function hasPass(output) {
 
 // ─── compile + simulate / bmc ─────────────────────────────────────────────────
 
-// Flags for LLHD IR (simulation): circt-sim / circt-sim-vpi consume LLHD.
+// Flags for LLHD IR (simulation): circt-sim consumes LLHD (includes VPI for UVM).
 const SIM_VERILOG_FLAGS = ['--ir-llhd', '--timescale', '1ns/1ns', '--single-unit'];
 
 // Flags for HW IR (BMC): circt-bmc consumes hw.module, not llhd.entity.
@@ -234,13 +234,13 @@ function compile(verilog, work, label, svFiles, { forBmc = false, extraFlags = [
 }
 
 function simulate(sim, mlirPath, { top = 'tb', extraArgs = [] } = {}) {
-  let mlir;
-  try { mlir = fs.readFileSync(mlirPath, 'utf8'); }
-  catch { return { ok: false, reason: 'MLIR output not written', output: '', exitCode: 1 }; }
-
+  if (!fs.existsSync(mlirPath)) {
+    return { ok: false, reason: 'MLIR output not written', output: '', exitCode: 1 };
+  }
+  // circt-sim uses NODERAWFS in Node.js builds — pass the native mlirPath directly.
   const { exitCode, stdout, stderr } = sim.invoke(
-    { '/workspace/sim.mlir': mlir },
-    ['--top', top, ...extraArgs, '/workspace/sim.mlir'],
+    {},
+    ['--top', top, ...extraArgs, mlirPath],
   );
   return { ok: true, output: stdout + stderr, exitCode };
 }
@@ -271,11 +271,12 @@ async function runMlirLesson({ sim, slug, lessonDir, results }) {
   for (const mlirFile of mlirFiles) {
     const fileLabel = `${label}/${mlirFile}`;
     process.stdout.write(`  ${fileLabel.padEnd(34)}`);
-    const content = fs.readFileSync(path.join(lessonDir, mlirFile), 'utf8');
+    const nativeMlirPath = path.join(lessonDir, mlirFile);
+    const content = fs.readFileSync(nativeMlirPath, 'utf8');
     const m = content.match(/hw\.module\s+@(\w+)/);
     const topModule = m ? m[1] : 'top';
-    const vpath = `/workspace/${mlirFile}`;
-    const { exitCode, stdout, stderr } = sim.invoke({ [vpath]: content }, ['--top', topModule, vpath]);
+    // circt-sim uses NODERAWFS in Node.js builds — pass the native path directly.
+    const { exitCode, stdout, stderr } = sim.invoke({}, ['--top', topModule, nativeMlirPath]);
     if (exitCode === 0) {
       console.log(`  ${G}ok${X}`);
       results.pass++;
@@ -405,13 +406,14 @@ const CIRCT_XFAIL = new Map([
   ['sv/tasks-functions',
    'circt#8: automatic task + virtual interface (sim hang)'],
 
-  // #10: virtual mem_if in UVM class method → Aborted (MLIR region isolation)
-  ['uvm/driver',          'circt#10: virtual if in class method → compiler crash'],
-  ['uvm/coverage-driven', 'circt#10: virtual if in class method → compiler crash'],
-  ['uvm/covergroup',      'circt#10: virtual if in class method → compiler crash'],
-  ['uvm/cross-coverage',  'circt#10: virtual if in class method → compiler crash'],
-  ['uvm/env',             'circt#10: virtual if in class method → compiler crash'],
-  ['uvm/monitor',         'circt#10: virtual if in class method → compiler crash'],
+  // #14: virtual mem_if in UVM class method → Aborted when interface is in separate file
+  //  #10 fixed the single-file case; multi-file --single-unit still crashes
+  ['uvm/driver',          'circt#14: virtual if in separate file → compiler crash'],
+  ['uvm/coverage-driven', 'circt#14: virtual if in separate file → compiler crash'],
+  ['uvm/covergroup',      'circt#14: virtual if in separate file → compiler crash'],
+  ['uvm/cross-coverage',  'circt#14: virtual if in separate file → compiler crash'],
+  ['uvm/env',             'circt#14: virtual if in separate file → compiler crash'],
+  ['uvm/monitor',         'circt#14: virtual if in separate file → compiler crash'],
 
   // #11: constraint_mode(0) and randomize() with { } have no effect
   ['uvm/seq-item',           'circt#11: constraint_mode() unimplemented'],
@@ -504,7 +506,8 @@ async function runLesson({ verilog, bmc, work, category, slug, lessonDir, result
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Simulation path (sv, sva-sim, uvm)
-  const simTool  = isUvm ? 'circt-sim-vpi' : 'circt-sim';
+  // The new circt-sim.js includes VPI support; use it for all lessons.
+  const simTool  = 'circt-sim';
   const topName  = isUvm ? 'tb_top' : 'tb';
   // UVM phase cleanup internally advances ~1 ns; give 10 ns to complete.
   // sv/sva simulations use a 10 µs (10^10 fs) ceiling to guard against hangs
