@@ -19,12 +19,12 @@ It's easy to model a flip-flop in SystemVerilog using an <code>always_ff</code> 
 Here, two flip-flops form a 2-stage pipeline — <code>out</code> always lags <code>mem</code> by one cycle:
 <pre>
 always_ff @(posedge clk) begin
-   mem &lt;= d;   // on each rising edge, capture d into mem
-   out &lt;= mem; // capture the old value of mem into out
-end
+   mem &lt;= d;   // step 1: read d's current value (not yet written)
+   out &lt;= mem; // step 1: read mem's current value (not yet written)
+end             // step 2: both mem and out update simultaneously
 </pre>
 <blockquote><p>
-   We use <strong><dfn data-card="Non-blocking assignment (<=) schedules the update to happen after all right-hand sides in the current time step are evaluated. This means two flip-flops can swap values correctly: a <= b; b <= a; works as expected. Blocking assignment (=) takes effect immediately, like a variable assignment in C — correct for combinational logic but causes races in sequential logic.">non-blocking assignment</dfn></strong> (<code>&lt;=</code>) inside <code>always_ff</code>. All right-hand sides are evaluated first, then all assignments happen simultaneously — this prevents races and models real flip-flop behaviour.</p></blockquote>
+   We use <strong><dfn data-card="Non-blocking assignment (<=) schedules the update to happen after all right-hand sides in the current time step are evaluated. This means two flip-flops can swap values correctly: a <= b; b <= a; works as expected. Blocking assignment (=) takes effect immediately, like a variable assignment in C — correct for combinational logic but causes races in sequential logic.">non-blocking assignment</dfn></strong> (<code>&lt;=</code>) inside <code>always_ff</code>. It works in two steps: first, all right-hand sides are sampled using current values; then all left-hand sides update simultaneously. So <code>out</code> always captures the value <code>mem</code> held <em>before</em> this edge — creating a true one-cycle delay, not a zero-delay pass-through. The same rule is why <code>a &lt;= b; b &lt;= a;</code> correctly swaps two flip-flops.</p></blockquote>
 <p>
 An SRAM is an array of flip-flops — one per bit — indexed by address.
 We'll need a slightly more advanced pattern to model that array.

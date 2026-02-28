@@ -42,3 +42,15 @@ You can even assign them with raw bit patterns:
 <blockquote><p>This is the command bus for our memory chip. In Part 3 the UVM driver will assemble a <code>mem_cmd_t</code> from a sequence item and drive it onto the interface every clock cycle.</p></blockquote>
 <h2>SRAM design</h2>
 <p><code>sram_cmd.sv</code> imports the <dfn data-card="A SystemVerilog package is a named namespace for sharing type definitions, functions, parameters, and tasks across multiple modules without copy-pasting. Declare types once in a package; any module can access them with 'import pkg_name::*;' or use the scoped form 'pkg_name::type_name'. Packages are similar to C++ namespaces or Python modules. In this design, mem_pkg exports mem_cmd_t so both the DUT and the testbench use the identical struct definition.">package</dfn> and uses <code>cmd.we</code>, <code>cmd.addr</code>, and <code>cmd.wdata</code> by name. After you add the fields the design compiles and the testbench exercises writes and reads via both struct literals and raw bit assignments.</p>
+<h2>Packed unions</h2>
+<p>A <strong><dfn data-card="A packed union overlays multiple named views onto the same bit pattern. All members occupy the same bits — writing through one member and reading through another is intentional and well-defined. The most common use is pairing a struct view with a flat logic vector so the same data can be accessed by field name in one place and passed as a raw bus in another.">packed union</dfn></strong> overlays multiple views onto the same bit pattern:</p>
+<pre>typedef union packed {
+    &lt;type&gt; &lt;field&gt;;
+    &lt;type&gt; &lt;field&gt;;
+} &lt;name&gt;_t;</pre>
+<p>All members share the same bits. A common pattern is pairing a struct with a flat bit-vector so you can pass data through a FIFO or parameterised bus as a raw logic value, then unpack it by field name at the other end:</p>
+<pre>typedef union packed {
+    mem_cmd_t    cmd;    // named-field access
+    logic [12:0] raw;    // flat-bus access
+} mem_word_t;</pre>
+<p>Both <code>.cmd</code> and <code>.raw</code> describe the same 13 bits — <code>we</code> + <code>addr</code> + <code>wdata</code>.</p>

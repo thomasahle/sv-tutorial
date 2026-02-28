@@ -6,37 +6,38 @@
     ...
     function &lt;type&gt; &lt;name&gt;(); ... endfunction
 endinterface</pre>
-<p>Concretely, our SRAM bus becomes:</p>
-<pre>interface mem_if (input logic clk);
-    logic        we;
-    logic [3:0]  addr;
-    logic [7:0]  wdata;
-    logic [7:0]  rdata;
-endinterface</pre>
-<p>Instead of passing each SRAM signal — <code>clk</code>, <code>we</code>, <code>addr</code>, <code>wdata</code>, <code>rdata</code> — between modules one by one, both the design and testbench connect through one handle:</p>
-<pre>module sram (mem_if bus);
+<p>With this interface, we can write out sram module as just</p>
+<pre>
+module sram (mem_if bus);
+  logic [7:0] mem [0:15];
+
   always_ff @(posedge bus.clk) begin
     if (bus.we) mem[bus.addr] &lt;= bus.wdata;
     bus.rdata &lt;= mem[bus.addr];
   end
-endmodule</pre>
+endmodule
+</pre>
 <p>Signals are accessed with dot notation — <code>bus.addr</code>, <code>bus.rdata</code> — just like struct fields.</p>
+<blockquote><p>On the surface fields in structs and signals in interfaces may seem very similar. But structs are passed by value (copy) while interfaces are a shared, by-reference connection when two modules need to communicate over the same set of wires.</p>
+</blockquote>
 
-<h2>Functions inside interfaces</h2>
-<p>An interface can also contain <strong>functions</strong> that operate on its signals.
+<p>In contrast with struts, interfaces can have <strong>functions</strong> that operate on its signals.
 The function body has direct access to the interface's own signals — no extra argument needed.
 These functions are not synthesisable and live only in testbenches and simulation models:</p>
 <pre>function string sprint();
-    return $sformatf("we=%0b addr=%0h wdata=%0h rdata=%0h",
-                     we, addr, wdata, rdata);
+    return $sformatf(...);
 endfunction</pre>
-<p>Any module that holds the interface calls it as <code>bus.sprint()</code>.</p>
-<p>Open <code>mem_if.sv</code> and implement <code>sprint()</code> so the testbench can log each transaction.</p>
+<p>Any module that holds the interface calls it as <code>bus.sprint()</code>.
+Note: <code>$sformatf()</code> is like <code>$display()</code> but returns a string instead of printing to the console.
+</p>
+<p>Task: implement <code>sprint()</code>
+in <code>mem_if.sv</code>
+so the testbench can log each transaction.
+</p>
 
-<blockquote><p><strong>Are interfaces like classes?</strong>
-They share the idea of bundling data with methods, but interfaces are hardware: their members are real wires that change in simulation time.
-They don't support inheritance, polymorphism, or <code>new()</code>.
-Think of an interface as a struct that defines a physical connector, with optional helper functions for testbench use.</p></blockquote>
+<blockquote><p>System Verilog also has <strong>classes</strong>, which are like structs with methods, and support inheritance and polymorphism.
+   Classes cannot be synthesized, but are used heavily in UVM.</p>
+</blockquote>
 
 <h2>Testbench</h2>
 <p>The testbench creates the interface instance and passes it to both the SRAM and the initial block. After each write it calls <code>bus.sprint()</code> to log the bus state, then reads back and checks the result.</p>

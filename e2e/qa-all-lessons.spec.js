@@ -41,6 +41,7 @@ const LESSONS = [
   { title: 'Non-Consecutive Equal Repetition [=m]',            slug: 'sva/nonconsec-eq',     runner: 'bmc'    },
   { title: 'throughout — Stability During a Sequence',         slug: 'sva/throughout',       runner: 'bmc'    },
   { title: 'Sequence Composition: intersect, within, and, or', slug: 'sva/sequence-ops',     runner: 'bmc'    },
+  { title: 'Sequence Formal Arguments',                        slug: 'sva/seq-args',         runner: 'bmc'    },
   { title: '$stable and $past',                                slug: 'sva/stable-past',      runner: 'bmc'    },
   { title: '$changed and $sampled',                            slug: 'sva/changed',          runner: 'bmc'    },
   { title: 'disable iff — Reset Handling',                     slug: 'sva/disable-iff',      runner: 'bmc'    },

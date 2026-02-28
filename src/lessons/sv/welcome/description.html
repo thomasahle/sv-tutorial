@@ -38,6 +38,7 @@ For example, you can write
 <pre>$display("HELLO, %s WORLD", "SRAM");</pre>
 </p>
 <blockquote><p>Every SystemVerilog simulation ends when <code>$finish</code> is called. Without it, the simulator would run forever waiting for events that never come.</p></blockquote>
+<blockquote><p><strong>Simulation vs. synthesis:</strong> <code>initial</code> blocks, <code>$display</code>, and <code>#n</code> delay controls exist only in simulation — they have no hardware equivalent and synthesis tools ignore them. Only structural constructs (<code>always_ff</code>, <code>always_comb</code>, module ports, <code>assign</code>) describe real hardware. You will use both worlds throughout this tutorial: RTL for the chip, simulation-only constructs for testing it.</p></blockquote>
 Hint: Install <a href="https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn" target="_blank">Claude Chrome Extension</a> to ask follow up questions on the lessons right in your browser. If any lesson can be improved, please send a <dfn data-card="
                        A pull request (PR) is a way to propose changes to a codebase. You create a PR by forking the repository, making your changes in a new branch, and then submitting the PR for review. The maintainers can discuss, request changes, and eventually merge your contributions into the main codebase.
                        ">PR</dfn> using the edit link below this text!

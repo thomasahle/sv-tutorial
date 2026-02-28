@@ -7,7 +7,7 @@
 // STAGE 1  hw + seq  (what you saw in the previous lesson)
 // ─────────────────────────────────────────────────────────────────────────
 
-hw.module @dff_before(in %d : i8, in %clk : i1, out q : i8) {
+hw.module @dff_before(in %d : i8, in %clk : !seq.clock, out q : i8) {
   %q = seq.compreg %d, %clk : i8
   hw.output %q : i8
 }

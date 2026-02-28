@@ -1,10 +1,26 @@
-              <p>A <strong><dfn data-card="A function in SystemVerilog computes a value and returns immediately — it runs in zero simulation time. Functions cannot contain timing controls like @(posedge clk) or #delay. They're used for combinational computations: parity checks, encoders, address decoding. Functions can be called in continuous assign statements.">function</dfn></strong> computes and returns a value immediately — it cannot consume simulation time. A <strong><dfn data-card="A task is like a function but can consume simulation time. It can contain @(posedge clk) to wait for clock edges, making it ideal for driving bus transactions: assert a signal, wait a cycle, de-assert. Tasks don't return a value but can have output arguments. UVM drivers use tasks internally to send one transaction at a time onto the interface.">task</dfn></strong> can call <code>@(posedge clk)</code> to wait for clock edges, making it the right tool for driving a bus protocol.</p>
-              <p>Open <code>tb.sv</code> and implement the three routine stubs:</p>
-              <ul>
-                <li><code>parity_check(d)</code> — a function that returns a single bit: <code>1</code> if <code>d</code> has an odd number of set bits. Hint: the reduction XOR operator <code>^d</code> computes this in one expression.</li>
-                <li><code>write_word(vif, addr, data)</code> — a task that drives one write transaction: assert <code>we</code>, set <code>addr</code> and <code>wdata</code>, wait one clock edge, then de-assert <code>we</code>.</li>
-                <li><code>read_word(vif, addr, data)</code> — a task that drives one read transaction: set <code>addr</code>, wait one clock edge, then capture <code>rdata</code>.</li>
-              </ul>
-              <blockquote><p>These are the exact helper routines a UVM driver uses internally. In Part 3 the driver wraps them in a class method that pulls transactions from a sequencer — but the core protocol logic is the same.</p></blockquote>
-              <h2>Testbench structure</h2>
-              <p>The <code>initial</code> block calls <code>write_word</code> and <code>read_word</code> using the shared <code>mem_if</code> virtual interface, then checks the parity of the returned data with <code>parity_check</code>.</p>
+<p>
+A <strong><dfn data-card="A function in SystemVerilog computes a value and returns immediately — it runs in zero simulation time. Functions cannot contain timing controls like @(posedge clk) or #delay. They're used for combinational computations: parity checks, encoders, address decoding. Functions can be called in continuous assign statements.">function</dfn></strong> is a piece of combinatorial logic, a blob of gates. It computes and returns a value immediately — it cannot consume simulation time.
+</p><p>
+A <strong><dfn data-card="A task is like a function but can consume simulation time. It can contain @(posedge clk) to wait for clock edges, making it ideal for driving bus transactions: assert a signal, wait a cycle, de-assert. Tasks don't return a value but can have output arguments. UVM drivers use tasks internally to send one transaction at a time onto the interface.">task</dfn></strong> is a co-routine. It doesn't return a value, and it can consume simulation time and wait for events, <code>@(posedge clk)</code> or <code>#N</code>.
+The syntax is:
+</p>
+<pre><code>task automatic task_name (input arg1, output arg2, ...);
+   // task body
+endtask</code></pre>
+<p>
+Here <code>automatic</code> means the task is re-entrant: it can be called recursively or from multiple places without interference.
+Non-automatic tasks share state across calls.
+</p>
+<p>
+Calling a task <code>write_word(addr, data)</code> is blocking.
+If you want to "spawn and forget" you can use <code><dfn data-card="The fork ... join_none block allows you to start a task in the background without waiting for it to finish. It's like saying 'go do this, but I don't care when you're done'. This is useful for starting parallel processes or timers that run independently of the main flow.">fork</dfn></code>.
+</p>
+<p>Your task: In <code>tb.sv</code> implement the three routine stubs:</p>
+<ul>
+   <li><code>parity_check(d)</code> — a function that returns a single bit: <code>1</code> if <code>d</code> has an odd number of set bits. Hint: the reduction XOR operator <code>^d</code> computes this in one expression.</li>
+   <li><code>write_word(vif, addr, data)</code> — a task that drives one write transaction: assert <code>we</code>, set <code>addr</code> and <code>wdata</code>, wait one clock edge, then de-assert <code>we</code>.</li>
+   <li><code>read_word(vif, addr, data)</code> — a task that drives one read transaction: set <code>addr</code>, wait one clock edge, then capture <code>rdata</code>.</li>
+</ul>
+<blockquote><p>These are the exact helper routines a UVM driver uses internally. In Part 3 the driver wraps them in a class method that pulls transactions from a sequencer — but the core protocol logic is the same.</p></blockquote>
+<h2>Testbench structure</h2>
+<p>The <code>initial</code> block calls <code>write_word</code> and <code>read_word</code> using the shared <code>mem_if</code> virtual interface, then checks the parity of the returned data with <code>parity_check</code>.</p>

@@ -70,8 +70,9 @@ Flag numbers identify the weak dimension(s): 1=Concept Focus, 2=Starter Calibrat
 ### Chapter: Interfaces & Procedures
 | Slug | Title | Status | Score | Prereqs | Teaches |
 |---|---|---|---|---|---|
-| `sv/interfaces` | Interfaces and modport | ✅ | 21/27 ⚠️2 | `sv/modules-and-ports`, `sv/parameters` | `interface`, `modport` (initiator/target), `virtual interface`, interface ports |
-| `sv/tasks-functions` | Tasks and Functions | ✅ | 24/27 | `sv/interfaces`, `sv/parameters` | `task` (automatic, timing-aware), `function` (pure), driving DUT via virtual interface |
+| `sv/interfaces` | Interfaces | ✅ | 21/27 ⚠️2 | `sv/modules-and-ports`, `sv/parameters` | `interface`, signal bundling, interface functions (`sprint()`), dot-notation access |
+| `sv/modports` | Modports | ✅ | 22/27 | `sv/interfaces` | `modport` (initiator/target), direction enforcement, `virtual interface` for UVM |
+| `sv/tasks-functions` | Tasks | ✅ | 24/27 | `sv/interfaces`, `sv/parameters` | `task` (automatic, timing-aware), `function` (pure), driving DUT via virtual interface |
 | `sv/clocking-blocks` | Clocking Blocks | 💡 | — | `sv/interfaces` | `clocking` block, input/output skew, synchronous testbench sampling |
 
 ### Chapter: State Machines
@@ -236,6 +237,26 @@ Flag numbers identify the weak dimension(s): 1=Concept Focus, 2=Starter Calibrat
 |---|---|---|---|---|---|
 | `cocotb/edge-triggers` | Edge Triggers | ✅ | 25/27 | `cocotb/clock-and-timing` | `RisingEdge`, `FallingEdge`, awaiting edge trigger objects |
 | `cocotb/clockcycles-patterns` | Clock Cycles & Patterns | ✅ | 25/27 | `cocotb/edge-triggers` | multi-cycle sequences, burst patterns, structured test routines |
+
+---
+
+## Diagram opportunities (from MIT 6.111 research)
+
+Reference PDFs in `reference/mit-6111/` (CC BY-NC-SA 4.0, Chandrakasan, Spring 2006).
+Listed by lesson, in priority order:
+
+| Lesson | Diagram to add | Source |
+|--------|---------------|--------|
+| `sv/always-ff` | D latch vs. D register schematics — "level-sensitive vs. edge-triggered" side-by-side | L5 p2 |
+| `sv/always-ff` | Pipeline timing: one stage with Tcq, Tlogic, Tsu labeled; formula T > Tcq+Tlogic+Tsu | L5 p3-5 |
+| `sv/always-ff` | Synchronous vs. async reset waveform comparison | L5 |
+| `sv/fsm` | ✅ Moore block diagram SVG added (Comb. Logic ↔ State Reg, inputs/outputs) | L6 p6 |
+| `sv/fsm` | Level-to-pulse edge-detector as a 2-state worked example before the SRAM controller | L6 p7 |
+| `sv/welcome` | HDL design flow: Problem → Behavioral → HDL → Synthesis → Implementation | L1 p12 |
+| `sv/data-types` | Two's complement circular number line (overflow wraparound visualised) | L8-9 p3 |
+| `sv/modules-and-ports` | Common logic gates table: NAND/AND/NOR/OR with symbol + truth table + Boolean expression | L2 p9 |
+| `sv/always-comb` | Gate-level mux diagram (AND/OR/NOT tree) matching the case statement | L3 |
+| `sv/interfaces` | Two module boxes wired through a named interface bundle | — |
 
 ---
 

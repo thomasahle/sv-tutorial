@@ -92,7 +92,7 @@ export const parts = [
       { title: 'Implication & BMC',         lessons: [L('sva/implication'), L('sva/formal-intro')] },
       { title: 'Core Sequences',            lessons: [L('sva/clock-delay'), L('sva/rose-fell'), L('sva/req-ack')] },
       { title: 'Repetition Operators',      lessons: [L('sva/consecutive-rep'), L('sva/nonconsec-rep'), L('sva/nonconsec-eq')] },
-      { title: 'Sequence Operators',        lessons: [L('sva/throughout'), L('sva/sequence-ops')] },
+      { title: 'Sequence Operators',        lessons: [L('sva/throughout'), L('sva/sequence-ops'), L('sva/seq-args')] },
       { title: 'Sampled Value Functions',   lessons: [L('sva/stable-past'), L('sva/changed')] },
       { title: 'Protocols & Coverage',      lessons: [L('sva/disable-iff'), L('sva/abort'), L('sva/cover-property')] },
       { title: 'Advanced Properties',       lessons: [L('sva/local-vars'), L('sva/onehot'), L('sva/triggered'), L('sva/checker'), L('sva/recursive')] },

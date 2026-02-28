@@ -6,6 +6,5 @@ interface mem_if (input logic clk);
   logic [7:0]  rdata;
 
   // TODO: implement sprint() — return a formatted string showing the current
-  //       signal values using $sformatf
-  // function string sprint(); ... endfunction
+  //       signal values (we, addr, wdata, rdata) using $sformatf
 endinterface

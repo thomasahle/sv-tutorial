@@ -1,0 +1,42 @@
+<p>A named sequence can declare <strong><dfn data-card="A formal argument in a named sequence or property is a placeholder identifier that is replaced with the actual signal or value at every call site. Typed formals (e.g., 'logic [3:0] a') bind constant values; the substitution happens at elaboration time so the same body describes the same structural pattern for any combination you supply.">formal arguments</dfn></strong> — typed placeholders that are substituted at each call site. This turns a sequence into a reusable template:</p>
+<pre>sequence write_txn(logic [3:0] a, logic [7:0] d);
+  we && (addr == a) && (wdata == d)
+endsequence
+
+assert property (@(posedge clk) write_txn(4'd0, 8'hA5) |=> rdata == 8'hA5);</pre>
+<p>When the checker expands <code>write_txn(4'd0, 8'hA5)</code>, it replaces every <code>a</code> with <code>4'd0</code> and every <code>d</code> with <code>8'hA5</code> throughout the body — exactly as if you had written those literals by hand.</p>
+<p>The same pattern can be applied to the property layer. <code>wr_rd_p</code> in <code>sram_check.sv</code> has its own typed formals <code>(a, d)</code>. It passes them straight through to <code>write_txn</code>, then reuses them in the <strong><dfn data-card="The consequent of an implication is the part after the |-> or |=> arrow. The model checker only evaluates it when the antecedent (left-hand side) matched. If the antecedent never fires, the property is vacuously true.">consequent</dfn></strong>:</p>
+<svg width="400" height="160" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg" style="display:block;max-width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;margin:10px auto">
+  <rect width="400" height="160" rx="4" fill="#fffdf7"/>
+  <text x="8" y="16" fill="#0a5558" font-size="12" font-weight="bold">Write-then-read (1-cycle latency, combinational read)</text>
+  <line x1="6" y1="6" x2="6" y2="155" stroke="#d5cbb2" stroke-width="1"/>
+  <!-- clock: 7 half-cycles of 50px from x=50 -->
+  <text x="44" y="41" text-anchor="end" fill="#586469">clk</text>
+  <path d="M 50,44 L 100,44 L 100,30 L 150,30 L 150,44 L 200,44 L 200,30 L 250,30 L 250,44 L 300,44 L 300,30 L 350,30 L 350,44 L 390,44" stroke="#8a9da2" stroke-width="1.5" fill="none"/>
+  <!-- we: high at cycle 1 only -->
+  <text x="44" y="69" text-anchor="end" fill="#586469">we</text>
+  <path d="M 50,74 L 100,74 L 100,58 L 150,58 L 150,74 L 390,74" stroke="#cc5f2d" stroke-width="2" fill="none"/>
+  <!-- addr: shows 'a' at cycle 1, stable -->
+  <text x="44" y="97" text-anchor="end" fill="#586469">addr</text>
+  <rect x="100" y="82" width="50" height="18" fill="#fef3e8" rx="2"/>
+  <text x="125" y="95" text-anchor="middle" fill="#cc5f2d" font-size="11">a</text>
+  <rect x="150" y="82" width="50" height="18" fill="#e6f5f5" rx="2"/>
+  <text x="175" y="95" text-anchor="middle" fill="#0d6f72" font-size="11">a</text>
+  <!-- rdata: shows 'd' starting at cycle 2 -->
+  <text x="44" y="125" text-anchor="end" fill="#586469">rdata</text>
+  <rect x="50" y="110" width="100" height="18" fill="#f2f0ea" rx="2"/>
+  <text x="100" y="123" text-anchor="middle" fill="#8a9da2" font-size="11">?</text>
+  <rect x="150" y="110" width="50" height="18" fill="#e6f5f5" rx="2"/>
+  <text x="175" y="123" text-anchor="middle" fill="#0d6f72" font-size="11">d</text>
+  <!-- annotations -->
+  <line x1="100" y1="54" x2="100" y2="135" stroke="#cc5f2d" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="150" y1="54" x2="150" y2="135" stroke="#0d6f72" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="125" y="150" text-anchor="middle" fill="#cc5f2d" font-size="11">write_txn(a,d)</text>
+  <text x="220" y="150" text-anchor="middle" fill="#0d6f72" font-size="11">|=> addr==a |-> rdata==d</text>
+</svg>
+<p>Open <code>sram_check.sv</code>. Complete two tasks:</p>
+<ol>
+  <li>Fill in the <code>write_txn</code> sequence body: <code>we</code> is high, <code>addr</code> equals formal <code>a</code>, and <code>wdata</code> equals formal <code>d</code>.</li>
+  <li>Add two <code>assert property</code> lines that instantiate <code>wr_rd_p</code> with <code>(4'd0, 8'hA5)</code> and <code>(4'hF, 8'hFF)</code>.</li>
+</ol>
+<blockquote><p>Formals are inlined at elaboration time, so the model checker sees two fully expanded properties — one for address 0 and one for address 15. If you wanted to check <em>all</em> address/data combinations at once, you'd use a local variable to capture the write values and carry them into the consequent (covered in the <strong>Local Variables</strong> lesson).</p></blockquote>

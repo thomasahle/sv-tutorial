@@ -41,6 +41,12 @@
 
 <blockquote><p>Using <code>bit [31:0]</code> instead of <code>int</code> for a testbench counter seems harmless — until you set it to <code>-1</code> and the comparison <code>count &lt; 0</code> silently returns false because <code>bit</code> is unsigned. Similarly, using <code>bit [7:0]</code> instead of <code>logic [7:0]</code> for an RTL port means <code>X</code> silently becomes <code>0</code>, hiding uninitialized-signal bugs.</p></blockquote>
 
+<h2>Signed arithmetic and overflow</h2>
+<p>Signed types use <strong><dfn data-card="Two's complement is the standard binary encoding for signed integers. To negate a number: invert all bits and add 1. For an N-bit type the range is -2^(N-1) to 2^(N-1)-1. The key property that makes it useful in hardware is that addition and subtraction use the exact same circuit regardless of sign — no special-case logic needed. Overflow occurs when the carry into the sign bit differs from the carry out of the sign bit: adding two positives gives a negative, or adding two negatives gives a positive.">two's complement</dfn></strong> encoding. Overflow wraps silently:</p>
+<pre>byte a = 127;
+a = a + 1;  // wraps to -128, not 128 — overflow!</pre>
+<p>The rule: overflow occurs when you add two numbers of the same sign and the result has the opposite sign. Hardware detects this as <code>carry_in_to_sign_bit XOR carry_out_of_sign_bit</code>, but in SystemVerilog you usually just size your types large enough to prevent it.</p>
+
 <h2>The <code>$isunknown()</code> system function</h2>
 <p><code>$isunknown(expr)</code> returns <code>1</code> if any bit of <code>expr</code> is <code>X</code> or <code>Z</code>. It lets a testbench explicitly check that a <code>logic</code> signal is carrying unknown — which is exactly what you want to verify after writing to a 4-state type.</p>
 
