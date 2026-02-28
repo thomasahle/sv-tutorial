@@ -19,6 +19,7 @@
 #   #31  constraint solver drops individual bounds when cross-variable expression present
 #   #32  single-bit signal writes via modport in parameterized interface don't propagate
 #   #33  $sscanf always returns 0 and does not parse any values
+#   #34  unpacked arrays of struct types: member writes fail (reads as 0/X)
 
 set -uo pipefail
 
@@ -26,13 +27,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
@@ -64,7 +65,7 @@ check_once() {
 }
 
 if [[ "${1:-}" == "--loop" ]]; then
-  echo "Monitoring circt issues #14, #20-#33 (every 5 min, Ctrl+C to stop)…"
+  echo "Monitoring circt issues #14, #20-#34 (every 5 min, Ctrl+C to stop)…"
   while true; do
     echo
     echo "[$(date '+%H:%M:%S')]"
