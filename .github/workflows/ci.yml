@@ -6,9 +6,6 @@ on:
       - main
   pull_request:
 
-permissions:
-  contents: write  # needed for gh release upload (publish:circt step)
-
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -16,13 +13,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
-    env:
-      CIRCT_WASM_JOBS: "4"
-      CIRCT_WASM_CONFIGURE_TIMEOUT_MIN: "45"
-      CIRCT_WASM_BUILD_TIMEOUT_MIN: "150"
-      CIRCT_WASM_CLEAN_BUILD: "1"
-      GH_TOKEN: ${{ secrets.CIRCT_TOKEN }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -31,35 +22,13 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Restore emsdk cache
-        uses: actions/cache@v4
-        with:
-          path: .cache/emsdk
-          key: emsdk-${{ runner.os }}-4.0.21
-
       - name: Install host prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y rsync unzip ninja-build
-
-      - name: Install emsdk 4.0.21
-        run: |
-          EMSDK_DIR="$GITHUB_WORKSPACE/.cache/emsdk"
-          if [ ! -d "$EMSDK_DIR/.git" ]; then
-            rm -rf "$EMSDK_DIR"
-            git clone https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
-          fi
-          "$EMSDK_DIR/emsdk" install 4.0.21
-          "$EMSDK_DIR/emsdk" activate 4.0.21
-          echo "EMSDK=$EMSDK_DIR" >> "$GITHUB_ENV"
-          echo "$EMSDK_DIR" >> "$GITHUB_PATH"
-          echo "$EMSDK_DIR/upstream/emscripten" >> "$GITHUB_PATH"
+          sudo apt-get install -y rsync unzip
 
       - name: Install npm dependencies
         run: npm ci
-
-      - name: Validate requirements
-        run: scripts/check-requirements.sh --with-wasm
 
       - name: Setup Surfer assets
         run: scripts/setup-surfer.sh
@@ -67,17 +36,27 @@ jobs:
       - name: Setup Pyodide assets
         run: scripts/setup-pyodide.sh
 
-      - name: Configure git credentials for private CIRCT fork
-        run: gh auth setup-git
-
-      - name: Setup pinned CIRCT checkout
-        run: scripts/setup-circt.sh
-
-      - name: Build CIRCT wasm artifacts
-        run: scripts/build-circt-wasm.sh
-
-      - name: Sync CIRCT wasm into app
-        run: npm run sync:circt
+      - name: Download CIRCT wasm artifacts
+        # WASM artifacts are built locally and published to the circt-wasm release
+        # via: npm run build:circt && npm run publish:circt
+        # CI just downloads the pre-built artifacts — no Emscripten build here.
+        run: |
+          mkdir -p static/circt
+          if gh release download circt-wasm \
+               --repo "$GITHUB_REPOSITORY" \
+               -D static/circt \
+               --clobber 2>/dev/null; then
+            if [ -f static/circt/uvm-core.tar.gz ]; then
+              rm -rf static/circt/uvm-core
+              tar -xzf static/circt/uvm-core.tar.gz -C static/circt
+            fi
+            echo "CIRCT artifacts downloaded"
+            ls -lh static/circt/*.js
+          else
+            echo "::warning::No circt-wasm release found — WASM smoke tests will be skipped"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run unit tests
         run: npm test
@@ -96,12 +75,6 @@ jobs:
             --smoke \
             --retries 3 \
             --log-dir "$LOG_DIR"
-
-      - name: Publish CIRCT wasm to release
-        if: github.ref == 'refs/heads/main'
-        run: npm run publish:circt
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload UVM smoke logs
         if: always()

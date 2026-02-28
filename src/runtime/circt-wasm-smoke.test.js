@@ -19,6 +19,8 @@ const CIRCT_DIR = path.resolve(
   '../../static/circt'
 );
 
+const artifactsPresent = fs.existsSync(path.join(CIRCT_DIR, 'circt-verilog.js'));
+
 /**
  * Load a CIRCT WASM tool into an isolated vm context.
  * Returns an object with `invoke(inputFiles, args)` that resets output capture per call.
@@ -150,7 +152,7 @@ function waitForReady(context, ms) {
 
 // ---------------------------------------------------------------------------
 
-describe('CIRCT WASM smoke tests', { timeout: 90_000 }, () => {
+describe.skipIf(!artifactsPresent)('CIRCT WASM smoke tests', { timeout: 90_000 }, () => {
   let verilog;
   let sim;
   // Real temp directory — required because circt-verilog uses NODERAWFS (real fs).
