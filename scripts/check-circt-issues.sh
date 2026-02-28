@@ -29,6 +29,8 @@
 #   #41  constraint implication operator (->) silently ignored
 #   #42  rand_mode(0) on class object doesn't freeze all rand variables
 #   #43  $sformatf/display %h shows too few digits for int type
+#   #44  $rose/$fell/$stable in always_ff fails with moore.past legalization error
+#   #45  dist constraint generates values outside the distribution
 
 set -uo pipefail
 
@@ -36,13 +38,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
