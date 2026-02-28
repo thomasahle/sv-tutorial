@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: write  # needed for gh release upload (publish:circt step)
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -93,6 +96,12 @@ jobs:
             --smoke \
             --retries 3 \
             --log-dir "$LOG_DIR"
+
+      - name: Publish CIRCT wasm to release
+        if: github.ref == 'refs/heads/main'
+        run: npm run publish:circt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload UVM smoke logs
         if: always()
