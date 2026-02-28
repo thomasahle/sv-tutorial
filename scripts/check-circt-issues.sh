@@ -10,6 +10,11 @@
 #   #22  class-level constraints ignored on plain randomize()  (uvm/seq-item)
 #   #23  UVM factory type_id::set_type_override() no effect  (uvm/factory-override)
 #   #24  wait fork returns on first completion (join_any semantics instead of join)
+#   #25  static unpacked arrays of 4-state types in class bodies lose written values (read X)
+#   #26  std::randomize() always returns same constant value, ignores constraints
+#   #27  queue equality comparison between two queue variables fails legalization
+#   #28  static local variables in functions not preserved across calls (treated as automatic)
+#   #29  clocking block inside interface cannot reference interface port (unknown name)
 
 set -uo pipefail
 
@@ -17,13 +22,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
@@ -55,7 +60,7 @@ check_once() {
 }
 
 if [[ "${1:-}" == "--loop" ]]; then
-  echo "Monitoring circt issues #14, #20-#24 (every 5 min, Ctrl+C to stop)…"
+  echo "Monitoring circt issues #14, #20-#29 (every 5 min, Ctrl+C to stop)…"
   while true; do
     echo
     echo "[$(date '+%H:%M:%S')]"
