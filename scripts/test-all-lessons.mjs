@@ -387,7 +387,8 @@ const SKIP_START_CHECK = new Set(['sva/concurrent-sim', 'sva/vacuous-pass']);
 // Observation lessons where the SOLUTION intentionally does not print PASS.
 // For these we only verify that the solution compiles and runs without crashing.
 // e.g. uvm/reporting — the solution uses `uvm_error` on purpose to show the macro.
-const SKIP_SOL_PASS = new Set(['uvm/reporting']);
+// e.g. sv/welcome — intro lesson that just does $display + $finish, no PASS check.
+const SKIP_SOL_PASS = new Set(['uvm/reporting', 'sv/welcome']);
 
 // Known CIRCT bugs that block solution verification.
 // When a bug is fixed, the test auto-promotes to PASS (XPASS is treated as pass).
@@ -396,10 +397,6 @@ const SKIP_SOL_PASS = new Set(['uvm/reporting']);
 // Bug report files live in docs/circt-bugs/.
 // GitHub issues: https://github.com/thomasnormal/circt/issues
 const CIRCT_XFAIL = new Map([
-  // #9: $bits() on hierarchical ref to parameterized port
-  ['sv/parameters',
-   'circt#9: $bits on parameterized port'],
-
   // #20: interface signal writes in automatic tasks don't drive DUT ports.
   //  #8 (sim hang) is fixed; tasks can now detect clock edges. But vif.we/addr/wdata
   //  writes only update the LLVM backing store — hw.instance "dut" @sram was
@@ -435,7 +432,8 @@ const CIRCT_XFAIL = new Map([
 
 async function runLesson({ verilog, bmc, work, category, slug, lessonDir, results, meta }) {
   const label      = `${category}/${slug}`;
-  const runner     = meta[`${slug.includes('/') ? slug : `${category.replace(/-.*/, '')}/${slug}`}`]?.runner;
+  const lessonMeta = meta[`${slug.includes('/') ? slug : `${category.replace(/-.*/, '')}/${slug}`}`] ?? {};
+  const runner     = lessonMeta.runner;
   const isBmc      = category === 'sva-bmc';
   const isUvm      = category === 'uvm';
   const isSimOnly  = category === 'sva-sim';
@@ -444,8 +442,13 @@ async function runLesson({ verilog, bmc, work, category, slug, lessonDir, result
   const skipSolPass = SKIP_SOL_PASS.has(label);
 
   // ── Skip checks ─────────────────────────────────────────────────────────────
+  // Support custom top module name via meta.top (e.g. sv/events uses 'event_sync',
+  // sv/data-types uses 'top' with file named data_types.sv).
+  const metaTop    = lessonMeta.top;
   const hasTb = fs.existsSync(path.join(lessonDir, 'tb.sv')) ||
-                fs.existsSync(path.join(lessonDir, 'tb_top.sv'));
+                fs.existsSync(path.join(lessonDir, 'tb_top.sv')) ||
+                // If meta.top is set, any starter .sv file can serve as the testbench.
+                (metaTop ? getSvFiles(lessonDir).some(f => !f.endsWith('.sol.sv')) : false);
 
   if (!isBmc && !hasTb) {
     console.log(`  ${D}SKIP  ${label} (no testbench)${X}`);
@@ -515,7 +518,7 @@ async function runLesson({ verilog, bmc, work, category, slug, lessonDir, result
   // Simulation path (sv, sva-sim, uvm)
   // The new circt-sim.js includes VPI support; use it for all lessons.
   const simTool  = 'circt-sim';
-  const topName  = isUvm ? 'tb_top' : 'tb';
+  const topName  = metaTop ?? (isUvm ? 'tb_top' : 'tb');
   // UVM phase cleanup internally advances ~1 ns; give 10 ns to complete.
   // sv/sva simulations use a 10 µs (10^10 fs) ceiling to guard against hangs
   // in XFAIL lessons where $finish is never reached (e.g. tasks-functions).

@@ -3,11 +3,11 @@
 // stay co-located in each lesson directory and are loaded lazily on demand.
 export default {
   // ── SystemVerilog Basics ───────────────────────────────────────────────────
-  'sv/welcome':              { title: 'Welcome',                                      focus: '/src/top.sv' },
+  'sv/welcome':              { title: 'Welcome',                                      focus: '/src/top.sv',          top: 'top' },
   'sv/modules-and-ports':    { title: 'Modules and Ports',                            focus: '/src/adder.sv' },
-  'sv/data-types':           { title: 'Data Types',                                   focus: '/src/data_types.sv' },
+  'sv/data-types':           { title: 'Data Types',                                   focus: '/src/data_types.sv',  top: 'top' },
   'sv/always-comb':          { title: 'always_comb and case',                         focus: '/src/mux.sv' },
-  'sv/events':               { title: 'Events',                                        focus: '/src/event_sync.sv' },
+  'sv/events':               { title: 'Events',                                        focus: '/src/event_sync.sv',  top: 'event_sync' },
   'sv/always-ff':            { title: 'Flip-Flops with always_ff',                    focus: '/src/sram_core.sv' },
   'sv/counter':              { title: 'Up-Counter',                                   focus: '/src/counter.sv' },
   'sv/parameters':           { title: 'Parameters',                    focus: '/src/sram.sv' },
