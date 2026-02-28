@@ -20,6 +20,12 @@
 #   #32  single-bit signal writes via modport in parameterized interface don't propagate
 #   #33  $sscanf always returns 0 and does not parse any values
 #   #34  unpacked arrays of struct types: member writes fail (reads as 0/X)
+#   #35  array method 'with' clause ignored in sum/product/max/min
+#   #36  assign inside generate-for loop doesn't drive unpacked array elements (reads X)
+#   #37  $cast to enum succeeds (returns 1) for values not defined in the enum
+#   #38  inside constraint with value list (not range) ignored by constraint solver
+#   #39  $dimensions returns N+1 for unpacked arrays of integer scalar types (int, etc.)
+#   #40  writes to 2D (multidimensional) unpacked arrays silently fail (reads as 0)
 
 set -uo pipefail
 
@@ -27,13 +33,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
