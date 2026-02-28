@@ -393,37 +393,35 @@ const SKIP_SOL_PASS = new Set(['uvm/reporting']);
 // Format: lesson-label → short reason string for display.
 //
 // Bug report files live in docs/circt-bugs/.
+// GitHub issues: https://github.com/thomasnormal/circt/issues
 const CIRCT_XFAIL = new Map([
-  // $bits() on hierarchical ref to parameterized port (bug-bits-hierarchical-parameterized-port.md)
+  // #9: $bits() on hierarchical ref to parameterized port
   ['sv/parameters',
-   'circt: $bits on parameterized port'],
+   'circt#9: $bits on parameterized port'],
 
-  // automatic task + virtual interface: compilation now succeeds (region
-  // isolation fixed), but circt-sim hangs — moore.wait_event inside func.func
-  // reads interface backing store via LLVM ptr; LLHD scheduler never wakes the
-  // process because it tracks only LLHD signals, not raw LLVM memory.
-  // (bug-automatic-task-outer-interface-mlir-region-isolation.md)
+  // #8: automatic task + virtual interface: compilation fixed (35fedd92a),
+  // but circt-sim hangs — moore.wait_event inside func.func reads interface
+  // backing store via LLVM ptr; LLHD scheduler tracks only LLHD signals.
   ['sv/tasks-functions',
-   'circt: automatic task + virtual interface (sim hang)'],
+   'circt#8: automatic task + virtual interface (sim hang)'],
 
-  // virtual mem_if in UVM class method causes Aborted in circt-verilog
-  // (MLIR region isolation crash — same family as tasks-functions bug)
-  ['uvm/driver',          'circt: virtual if in class → compiler crash'],
-  ['uvm/coverage-driven', 'circt: virtual if in class → compiler crash'],
-  ['uvm/covergroup',      'circt: virtual if in class → compiler crash'],
-  ['uvm/cross-coverage',  'circt: virtual if in class → compiler crash'],
-  ['uvm/env',             'circt: virtual if in class → compiler crash'],
-  ['uvm/monitor',         'circt: virtual if in class → compiler crash'],
+  // #10: virtual mem_if in UVM class method → Aborted (MLIR region isolation)
+  ['uvm/driver',          'circt#10: virtual if in class method → compiler crash'],
+  ['uvm/coverage-driven', 'circt#10: virtual if in class method → compiler crash'],
+  ['uvm/covergroup',      'circt#10: virtual if in class method → compiler crash'],
+  ['uvm/cross-coverage',  'circt#10: virtual if in class method → compiler crash'],
+  ['uvm/env',             'circt#10: virtual if in class method → compiler crash'],
+  ['uvm/monitor',         'circt#10: virtual if in class method → compiler crash'],
 
-  // constraint_mode(0) does not disable SV constraints in circt-sim
-  ['uvm/seq-item',           'circt: constraint_mode() unimplemented'],
-  ['uvm/constrained-random', 'circt: constraint_mode() unimplemented'],
+  // #11: constraint_mode(0) and randomize() with { } have no effect
+  ['uvm/seq-item',           'circt#11: constraint_mode() unimplemented'],
+  ['uvm/constrained-random', 'circt#11: constraint_mode() unimplemented'],
 
-  // UVM run_phase cleanup cannot terminate driver's forever loop → maxTime
-  ['uvm/sequence',     'circt: UVM phase cleanup hangs on forever-loop driver'],
+  // #12: UVM run_phase cleanup cannot terminate driver's forever loop
+  ['uvm/sequence',     'circt#12: UVM phase cleanup hangs on forever-loop driver'],
 
-  // UVM factory set_type_override() has no effect in circt-sim
-  ['uvm/factory-override', 'circt: UVM factory override not applied'],
+  // #13: UVM factory set_type_override() has no effect
+  ['uvm/factory-override', 'circt#13: UVM factory override not applied'],
 ]);
 
 async function runLesson({ verilog, bmc, work, category, slug, lessonDir, results, meta }) {

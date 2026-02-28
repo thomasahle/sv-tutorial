@@ -103,3 +103,11 @@ dedicated modules is not idiomatic SV.
 ## Version
 
 Tested with circt-verilog from CIRCT commit `3f4e18c4b` (LLVM `aa3d6b37c`).
+
+## Status: FIXED (compile crash)
+
+**Fixed by:** `35fedd92a [ImportVerilog] Capture outer interface refs in tasks`
+
+The MLIR region-isolation crash is resolved. `circt-verilog` now compiles this pattern successfully.
+
+**New issue:** The simulation still hangs — see GitHub issue #8. The root cause is different: `moore.wait_event` inside a `func.func` (the lowered task body) reads `vif.clk` from the LLVM backing store rather than from an LLHD signal, so the LLHD scheduler never wakes the suspended process on a clock edge.
