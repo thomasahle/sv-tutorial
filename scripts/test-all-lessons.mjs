@@ -382,13 +382,22 @@ async function runCocotbLesson({ slug, lessonDir, results, work }) {
 const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', D = '\x1b[2m', X = '\x1b[0m';
 
 // Observation/demo lessons: the starter intentionally also passes.
-const SKIP_START_CHECK = new Set(['sva/concurrent-sim', 'sva/vacuous-pass']);
+// Covergroup lessons (covergroup-basics, coverpoint-bins, cross-coverage): the starter is a
+// working SRAM test (prints PASS); the student adds coverpoints on top of the passing design.
+const SKIP_START_CHECK = new Set([
+  'sva/concurrent-sim', 'sva/vacuous-pass',
+  'sv/covergroup-basics', 'sv/coverpoint-bins', 'sv/cross-coverage',
+]);
 
 // Observation lessons where the SOLUTION intentionally does not print PASS.
 // For these we only verify that the solution compiles and runs without crashing.
 // e.g. uvm/reporting — the solution uses `uvm_error` on purpose to show the macro.
-// e.g. sv/welcome — intro lesson that just does $display + $finish, no PASS check.
-const SKIP_SOL_PASS = new Set(['uvm/reporting', 'sv/welcome']);
+// e.g. sv/welcome    — intro lesson that just does $display + $finish, no PASS check.
+// e.g. covergroup-*  — covergroup lessons produce a coverage report, not a PASS line.
+const SKIP_SOL_PASS = new Set([
+  'uvm/reporting', 'sv/welcome',
+  'sv/covergroup-basics', 'sv/coverpoint-bins', 'sv/cross-coverage',
+]);
 
 // Known CIRCT bugs that block solution verification.
 // When a bug is fixed, the test auto-promotes to PASS (XPASS is treated as pass).
