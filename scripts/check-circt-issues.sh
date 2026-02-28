@@ -6,9 +6,6 @@
 # Tracked issues (open):
 #   #14  virtual if in separate file → compiler crash  (UVM driver/env/monitor/coverage lessons)
 #   #20  interface signal writes in tasks don't drive DUT  (sv/tasks-functions)
-#   #21  UVM run_phase phase-cleanup deadlock  (uvm/constrained-random, sequence)
-#   #22  class-level constraints ignored on plain randomize()  (uvm/seq-item)
-#   #23  UVM factory type_id::set_type_override() no effect  (uvm/factory-override)
 #   #24  wait fork returns on first completion (join_any semantics instead of join)
 #   #25  static unpacked arrays of 4-state types in class bodies lose written values (read X)
 #   #26  std::randomize() always returns same constant value, ignores constraints
@@ -38,6 +35,16 @@
 #   #50  ref argument writes not visible outside task: stale pre-call value used in comparisons
 #   #51  packed union member writes silently fail: drive through unrealized_conversion_cast has no effect
 #   #52  array/queue slice (a[lo:hi]) fails: dynamic arrays give legalization error, queues return empty
+#   #53  queue literal q={e1,e2,...} creates correct-size queue but all element values are 0
+#   #59  queue copy (q2=q1) only copies first element correctly — remaining elements read as 0
+#   #61  $countbits(v,1'b1) and $countbits(v,1'b0) always return 0
+#   #64  $countbits(v,1'bx) and $countbits(v,1'bz) rejected at compile time
+#   #65  streaming operators ({>> N {unpacked_array}}) fail: "cannot be cast to simple bit vector"
+#
+# Closed (fixed upstream):
+#   #21  UVM run_phase phase-cleanup deadlock  → fixed in 401f5dc8c
+#   #22  class-level constraints ignored on plain randomize()  → fixed in 401f5dc8c
+#   #23  UVM factory type_id::set_type_override() no effect  → fixed in 401f5dc8c
 
 set -uo pipefail
 
@@ -45,13 +52,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,59,61,64,65)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,59,61,64,65)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
@@ -83,7 +90,7 @@ check_once() {
 }
 
 if [[ "${1:-}" == "--loop" ]]; then
-  echo "Monitoring circt issues #14, #20-#34 (every 5 min, Ctrl+C to stop)…"
+  echo "Monitoring circt issues #14,#20,#24-#52,#53,#59,#61,#64-#65 (every 5 min, Ctrl+C to stop)…"
   while true; do
     echo
     echo "[$(date '+%H:%M:%S')]"
