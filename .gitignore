@@ -22,3 +22,5 @@ static/pyodide/
 playwright-console.log
 playwright-report/
 test-results/
+__pycache__/
+*.pyc
