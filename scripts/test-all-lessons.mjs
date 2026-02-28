@@ -417,15 +417,20 @@ const CIRCT_XFAIL = new Map([
   ['uvm/env',             'circt#14: virtual if in separate file → compiler crash'],
   ['uvm/monitor',         'circt#14: virtual if in separate file → compiler crash'],
 
-  // #11: constraint_mode(0) and randomize() with { } have no effect
-  ['uvm/seq-item',           'circt#11: constraint_mode() unimplemented'],
-  ['uvm/constrained-random', 'circt#11: constraint_mode() unimplemented'],
+  // #22: class-level constraints ignored on plain randomize() (#11 fixed inline/constraint_mode)
+  // #21: run_phase phase-cleanup deadlock prevents $finish after objections dropped
+  ['uvm/seq-item',           'circt#22: class-level constraint not applied on randomize()'],
 
-  // #12: UVM run_phase cleanup cannot terminate driver's forever loop
-  ['uvm/sequence',     'circt#12: UVM phase cleanup hangs on forever-loop driver'],
+  // #21: run_phase phase-cleanup deadlock — #11 fixes work but simulation can\'t terminate
+  ['uvm/constrained-random', 'circt#21: UVM phase cleanup deadlock prevents $finish'],
 
-  // #13: UVM factory set_type_override() has no effect
-  ['uvm/factory-override', 'circt#13: UVM factory override not applied'],
+  // #21: run_phase phase-cleanup deadlock — #12 fixed driver forever-loop but general deadlock remains
+  ['uvm/sequence',     'circt#21: UVM phase cleanup deadlock prevents $finish'],
+
+  // #23: factory type_id::set_type_override() has no effect (#13 not fully fixed)
+  // #22: class-level constraint not applied (range_c ignored even if factory worked)
+  // #21: run_phase phase-cleanup deadlock (tertiary)
+  ['uvm/factory-override', 'circt#23: UVM factory override not applied'],
 ]);
 
 async function runLesson({ verilog, bmc, work, category, slug, lessonDir, results, meta }) {
