@@ -400,11 +400,13 @@ const CIRCT_XFAIL = new Map([
   ['sv/parameters',
    'circt#9: $bits on parameterized port'],
 
-  // #8: automatic task + virtual interface: compilation fixed (35fedd92a),
-  // but circt-sim hangs — moore.wait_event inside func.func reads interface
-  // backing store via LLVM ptr; LLHD scheduler tracks only LLHD signals.
+  // #20: interface signal writes in automatic tasks don't drive DUT ports.
+  //  #8 (sim hang) is fixed; tasks can now detect clock edges. But vif.we/addr/wdata
+  //  writes only update the LLVM backing store — hw.instance "dut" @sram was
+  //  connected to one-time snapshot values at module init; DUT never sees updates.
+  //  Also, DUT rdata output is stored to backing store once at init ('x'), never updated.
   ['sv/tasks-functions',
-   'circt#8: automatic task + virtual interface (sim hang)'],
+   'circt#20: interface signal writes in tasks don\'t drive DUT ports'],
 
   // #14: virtual mem_if in UVM class method → Aborted when interface is in separate file
   //  #10 fixed the single-file case; multi-file --single-unit still crashes

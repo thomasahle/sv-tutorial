@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
-# Polls thomasnormal/circt issues #8-#13 for state changes.
+# Polls thomasnormal/circt issues blocking tutorial lessons for state changes.
 # Usage: ./scripts/check-circt-issues.sh [--loop]
 #   --loop  : run every 5 minutes until interrupted (default: check once)
+#
+# Tracked issues (open):
+#   #14  virtual if in separate file → compiler crash  (UVM lessons)
+#   #20  interface signal writes in tasks don't drive DUT  (sv/tasks-functions)
 
 set -uo pipefail
 
-ISSUES=(8 9 10 11 12 13)
 BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(8,9,10,11,12,13)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(8,9,10,11,12,13)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
@@ -24,7 +27,7 @@ check_once() {
   local current
   current=$(fetch_state)
 
-  echo "=== thomasnormal/circt issues #8-#13 ==="
+  echo "=== thomasnormal/circt open issues (blocking tutorial) ==="
   print_issues
   echo
 
@@ -48,7 +51,7 @@ check_once() {
 }
 
 if [[ "${1:-}" == "--loop" ]]; then
-  echo "Monitoring circt issues #8-#13 (every 5 min, Ctrl+C to stop)…"
+  echo "Monitoring circt issues #14, #20 (every 5 min, Ctrl+C to stop)…"
   while true; do
     echo
     echo "[$(date '+%H:%M:%S')]"
