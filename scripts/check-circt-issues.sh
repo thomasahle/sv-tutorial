@@ -15,6 +15,8 @@
 #   #27  queue equality comparison between two queue variables fails legalization
 #   #28  static local variables in functions not preserved across calls (treated as automatic)
 #   #29  clocking block inside interface cannot reference interface port (unknown name)
+#   #30  queue variable with pattern initializer at module level is empty (size 0)
+#   #31  constraint solver drops individual bounds when cross-variable expression present
 
 set -uo pipefail
 
@@ -22,13 +24,13 @@ BASELINE_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/circt-issue-baseline.txt"
 
 fetch_state() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31)) | "\(.number)|\(.state)|\(.comments)|\(.updated_at)"' \
     2>/dev/null | grep -v '^$' | sort -t'|' -k1,1n
 }
 
 print_issues() {
   gh api repos/thomasnormal/circt/issues \
-    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
+    --jq '.[] | select(.number | IN(14,20,21,22,23,24,25,26,27,28,29,30,31)) | "#\(.number) [\(.state)] \(.title)  (comments:\(.comments), updated:\(.updated_at))"' \
     2>/dev/null | sort -t'#' -k2,2n
 }
 
@@ -60,7 +62,7 @@ check_once() {
 }
 
 if [[ "${1:-}" == "--loop" ]]; then
-  echo "Monitoring circt issues #14, #20-#29 (every 5 min, Ctrl+C to stop)…"
+  echo "Monitoring circt issues #14, #20-#31 (every 5 min, Ctrl+C to stop)…"
   while true; do
     echo
     echo "[$(date '+%H:%M:%S')]"
