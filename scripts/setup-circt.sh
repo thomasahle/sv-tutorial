@@ -60,7 +60,7 @@ Next:
      cmake ... -DCIRCT_SIM_WASM=ON -DCIRCT_BMC_WASM=ON
    VPI-capable sim for cocotb lessons (additional build target):
      cmake ... -DCIRCT_SIM_WASM_VPI=ON
-2. Run npm run local:circt (or publish:circt to also push to GitHub Release).
+2. Run npm run local-publish:circt (or publish:circt to also push to GitHub Release).
    (The script also patches browser-compatibility issues in circt-sim.js.)
 3. Optionally override artifact URLs with VITE_* env vars in .env:
    VITE_CIRCT_VERILOG_JS_URL / VITE_CIRCT_VERILOG_WASM_URL

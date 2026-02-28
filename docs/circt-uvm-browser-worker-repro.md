@@ -10,7 +10,7 @@ without using lesson UI clicks.
 
 ```bash
 scripts/setup-circt.sh
-npm run local:circt
+npm run local-publish:circt
 ```
 
 ## Repro command

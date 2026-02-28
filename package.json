@@ -14,7 +14,7 @@
     "build:circt": "./scripts/build-circt-wasm.sh",
     "bootstrap:repro": "./scripts/bootstrap-repro.sh",
     "repro:vpi:node": "node scripts/repro-cocotb-vpi-put-value.mjs",
-    "local:circt": "./scripts/sync-circt-wasm.sh",
+    "local-publish:circt": "./scripts/sync-circt-wasm.sh",
     "publish:circt": "./scripts/sync-circt-wasm.sh --publish",
     "test": "vitest run",
     "test:e2e": "playwright test"

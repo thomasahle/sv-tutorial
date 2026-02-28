@@ -11,7 +11,7 @@ scripts/setup-surfer.sh
 scripts/setup-pyodide.sh
 scripts/setup-circt.sh
 scripts/build-circt-wasm.sh
-npm run local:circt
+npm run local-publish:circt
 npm run build
 
 echo "Bootstrap complete."

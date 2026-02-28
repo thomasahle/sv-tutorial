@@ -40,7 +40,7 @@ Equivalent step-by-step:
 3. `npm run setup:pyodide`
 4. `npm run setup:circt`
 5. `npm run build:circt`
-6. `npm run local:circt`
+6. `npm run local-publish:circt`
 7. `npm run build`
 
 The CIRCT wasm build script enforces conservative resource limits by default:
@@ -66,7 +66,7 @@ CIRCT_WASM_TARGETS="circt-verilog circt-sim circt-bmc circt-sim-vpi" npm run bui
 - `npm run setup:pyodide`
 - `npm run setup:circt`
 - `npm run build:circt`
-- `npm run local:circt`
+- `npm run local-publish:circt`
 - `npm run bootstrap:repro`
 
 ## Optional Runtime Overrides
@@ -112,7 +112,7 @@ In `.env` (copy `.env.example`):
   4. run `scripts/setup-pyodide.sh`
   5. run `scripts/setup-circt.sh` (pinned CIRCT ref)
   6. run `scripts/build-circt-wasm.sh`
-  7. run `npm run local:circt`
+  7. run `npm run local-publish:circt`
   8. run `npm run build`
 
 ## E2E
