@@ -185,7 +185,10 @@ function startViteDevServer(baseUrl, port) {
     const onData = (buf) => {
       const text = String(buf);
       output += text;
-      if (!ready && text.includes('Local:') && text.includes(baseUrl)) {
+      // Strip ANSI escape codes before matching — GitHub Actions sets FORCE_COLOR=1
+      // which makes Vite bold the port number: `http://127.0.0.1:\e[1m43173\e[22m/`
+      const plain = text.replace(/\x1b\[[0-9;]*m/g, '');
+      if (!ready && plain.includes('Local:') && plain.includes(baseUrl)) {
         ready = true;
         clearTimeout(timer);
         resolve();
