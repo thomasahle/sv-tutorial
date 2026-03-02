@@ -412,14 +412,14 @@ const CIRCT_XFAIL = new Map([
   // $bits(u_small.addr) returns wrong value; SRAM data checks pass but $bits check fails.
   ['sv/parameters', '$bits() on hierarchical ref to parameterized port'],
 
-  // #14: virtual mem_if in UVM class method → Aborted when interface is in separate file
-  //  #10 fixed the single-file case; multi-file --single-unit still crashes
-  ['uvm/driver',          'circt#14: virtual if in separate file → compiler crash'],
-  ['uvm/coverage-driven', 'circt#14: virtual if in separate file → compiler crash'],
-  ['uvm/covergroup',      'circt#14: virtual if in separate file → compiler crash'],
-  ['uvm/cross-coverage',  'circt#14: virtual if in separate file → compiler crash'],
-  ['uvm/env',             'circt#14: virtual if in separate file → compiler crash'],
-  ['uvm/monitor',         'circt#14: virtual if in separate file → compiler crash'],
+  // #14 FIXED in 6bbef7ca4 (clamp slang parser threads on WASM) — compilation now succeeds
+  // Remaining blocker: #21 phase-cleanup deadlock prevents $finish (same as seq-item/sequence)
+  ['uvm/driver',          'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
+  ['uvm/coverage-driven', 'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
+  ['uvm/covergroup',      'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
+  ['uvm/cross-coverage',  'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
+  ['uvm/env',             'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
+  ['uvm/monitor',         'circt#21: run_phase phase-cleanup deadlock prevents $finish (compilation fixed)'],
 
   // #22: class-level constraints NOW FIXED in 1d0ebb5e3 — randomize() applies them correctly
   // #21: run_phase phase-cleanup deadlock still prevents $finish from firing (run_test never returns)
