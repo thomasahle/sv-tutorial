@@ -7,7 +7,7 @@ readonly NODE_MAJOR_VERSION_LOCKED="22"
 readonly EMSDK_VERSION_LOCKED="4.0.21"
 
 readonly CIRCT_REPO_LOCKED="https://github.com/thomasnormal/circt.git"
-readonly CIRCT_REF_LOCKED="c5952e4d4888fd0689902680047648f7b6967946"
+readonly CIRCT_REF_LOCKED="a24ed43b83745b3d37e14e3c6f3d1975ff6dbbca"
 readonly CIRCT_LLVM_SUBMODULE_REF_LOCKED="aa3d6b37c7945bfb4c261dd994689de2a2de25bf"
 
 readonly SURFER_ARTIFACT_URL_LOCKED="https://gitlab.com/surfer-project/surfer/-/jobs/artifacts/main/download?job=pages_build"
