@@ -109,7 +109,7 @@ export const parts = [
         title: 'Functional Coverage',
         lessons: [L('uvm/covergroup'), L('uvm/cross-coverage'), L('uvm/coverage-driven')],
       },
-      { title: 'Advanced UVM',    lessons: [L('uvm/factory-override')] },
+      { title: 'Advanced UVM',    lessons: [L('uvm/factory-override'), L('uvm/ral')] },
     ],
   },
   {

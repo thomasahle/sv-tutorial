@@ -65,6 +65,7 @@ export default {
   'uvm/cross-coverage':      { title: 'Cross Coverage',                               focus: '/src/mem_coverage.sv' },
   'uvm/coverage-driven':     { title: 'Coverage-Driven Verification',                 focus: '/src/mem_test.sv' },
   'uvm/factory-override':    { title: 'Factory Overrides',                            focus: '/src/mem_test_corner.sv' },
+  'uvm/ral':                 { title: 'Register Abstraction Layer',                   focus: '/src/sram_reg_block.sv' },
 
   // ── MLIR & CIRCT ──────────────────────────────────────────────────────────
   'mlir/intro':    { title: 'What is MLIR?',                    focus: '/src/adder.mlir' },

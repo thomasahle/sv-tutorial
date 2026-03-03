@@ -1,0 +1,105 @@
+              <p>Writing verification code that pokes raw hex addresses is fragile — change the register map and everything breaks. The <dfn data-card="The Register Abstraction Layer (RAL) is a UVM framework that models a DUT's register map as a set of SystemVerilog objects. Instead of writing raw addresses, you access named fields on typed register objects. UVM tracks the mirror value (what software wrote) and the desired value (what you want), and provides built-in read/write/update/mirror tasks that drive the physical bus through an adapter.">Register Abstraction Layer (RAL)</dfn> replaces raw addresses with named, typed register objects:</p>
+              <pre>// Before: error-prone
+axi.write(32'h4000_0010, 8'h05);   // Which register? Which field?
+
+// After: self-documenting
+ral.ctrl.enable.set(1);
+ral.ctrl.mode.set(2'b10);</pre>
+
+              <h2>The UVM RAL skeleton</h2>
+              <p>Every register file follows the same two-class pattern:</p>
+              <pre>class &lt;RegName&gt; extends uvm_reg;
+  uvm_reg_field &lt;field&gt;;
+  function new(string name="&lt;RegName&gt;"); super.new(name, &lt;width&gt;, UVM_NO_COVERAGE); endfunction
+  virtual function void build();
+    &lt;field&gt; = uvm_reg_field::type_id::create("&lt;field&gt;");
+    &lt;field&gt;.configure(this, &lt;size&gt;, &lt;lsb_pos&gt;, "RW", 0, 0, 1, 0, 1);
+  endfunction
+  `uvm_object_utils(&lt;RegName&gt;)
+endclass
+
+class &lt;BlockName&gt; extends uvm_reg_block;
+  &lt;RegName&gt; &lt;reg&gt;;
+  function new(string name="&lt;BlockName&gt;"); super.new(name, UVM_NO_COVERAGE); endfunction
+  virtual function void build();
+    &lt;reg&gt; = &lt;RegName&gt;::type_id::create("&lt;reg&gt;");
+    &lt;reg&gt;.build();
+    &lt;reg&gt;.configure(this);
+    default_map = create_map("map", 'h0, 1, UVM_LITTLE_ENDIAN);
+    default_map.add_reg(&lt;reg&gt;, '&lt;offset&gt;, "RW");
+    lock_model();
+  endfunction
+  `uvm_object_utils(&lt;BlockName&gt;)
+endclass</pre>
+              <p>The three map calls at the end of <code>build()</code>:</p>
+              <ul>
+                <li><code>create_map()</code> — creates a named address map; the 3rd argument is bus width in bytes, the 4th is endianness</li>
+                <li><code>add_reg()</code> — places a register at a byte offset within the map</li>
+                <li><code>lock_model()</code> — freezes the model structure; must be called before any register access</li>
+              </ul>
+
+              <h2>UVM RAL hierarchy</h2>
+              <svg viewBox="0 0 340 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:340px;display:block;margin:12px 0">
+                <rect x="100" y="4" width="140" height="28" rx="4" fill="#1e3a2e" stroke="#4ade80" stroke-width="1.5"/>
+                <text x="170" y="23" text-anchor="middle" font-size="12" fill="#4ade80">uvm_reg_block</text>
+                <line x1="170" y1="32" x2="170" y2="48" stroke="#6b7280" stroke-width="1.5"/>
+                <rect x="100" y="48" width="140" height="28" rx="4" fill="#1e3a2e" stroke="#4ade80" stroke-width="1.5"/>
+                <text x="170" y="67" text-anchor="middle" font-size="12" fill="#4ade80">uvm_reg</text>
+                <line x1="170" y1="76" x2="170" y2="82" stroke="#6b7280" stroke-width="1.5"/>
+                <rect x="100" y="82" width="140" height="28" rx="4" fill="#1e3a2e" stroke="#4ade80" stroke-width="1.5"/>
+                <text x="170" y="101" text-anchor="middle" font-size="12" fill="#4ade80">uvm_reg_field</text>
+              </svg>
+
+              <h2>The starter model</h2>
+              <p>This lesson ships a hand-rolled register model that already compiles and simulates in CIRCT. Study how it maps to the skeleton above before converting it:</p>
+              <ul>
+                <li><strong>Fields as class members</strong> — <code>logic enable</code> and <code>logic [1:0] mode</code> are plain variables; <code>uvm_reg_field</code> replaces them</li>
+                <li><strong><code>to_data()</code></strong> — packs fields by hand: <code>{5'b0, mode, enable}</code>; <code>uvm_reg::get()</code> does this automatically using the <code>lsb_pos</code> from <code>configure()</code></li>
+                <li><strong><code>ADDR</code> localparam</strong> — the address is baked in; <code>uvm_reg_block</code> owns the map instead</li>
+              </ul>
+
+              <h2>Bit layout of the ctrl register</h2>
+              <svg viewBox="0 0 400 60" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;display:block;margin:12px 0">
+                <rect x="1" y="10" width="48" height="30" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+                <text x="25" y="30" text-anchor="middle" font-size="11" fill="#6b7280">enable</text>
+                <text x="25" y="48" text-anchor="middle" font-size="9" fill="#9ca3af">[0]</text>
+                <rect x="49" y="10" width="97" height="30" fill="none" stroke="#4ade80" stroke-width="1.5"/>
+                <text x="97" y="30" text-anchor="middle" font-size="11" fill="#6b7280">mode</text>
+                <text x="97" y="48" text-anchor="middle" font-size="9" fill="#9ca3af">[2:1]</text>
+                <rect x="146" y="10" width="253" height="30" fill="none" stroke="#374151" stroke-width="1.5"/>
+                <text x="272" y="30" text-anchor="middle" font-size="11" fill="#374151">reserved</text>
+                <text x="272" y="48" text-anchor="middle" font-size="9" fill="#6b7280">[7:3]</text>
+              </svg>
+
+              <h2>The <code>configure()</code> call explained</h2>
+              <p><code>uvm_reg_field::configure()</code> takes 9 parameters. The most important:</p>
+              <table>
+                <thead><tr><th>Parameter</th><th>Value in this lesson</th><th>Meaning</th></tr></thead>
+                <tbody>
+                  <tr><td><code>parent</code></td><td><code>this</code></td><td>The owning <code>uvm_reg</code></td></tr>
+                  <tr><td><code>size</code></td><td><code>1</code> / <code>2</code></td><td>Width in bits</td></tr>
+                  <tr><td><code>lsb_pos</code></td><td><code>0</code> / <code>1</code></td><td>Position of the LSB in the register — replaces the bit concatenation in <code>to_data()</code></td></tr>
+                  <tr><td><code>access</code></td><td><code>"RW"</code></td><td>Access policy (RW, RO, WO, …)</td></tr>
+                  <tr><td><code>reset</code></td><td><code>0</code></td><td>Reset value</td></tr>
+                </tbody>
+              </table>
+
+              <h2>Hand-rolled vs UVM RAL</h2>
+              <table>
+                <thead><tr><th>Hand-rolled</th><th>UVM RAL</th></tr></thead>
+                <tbody>
+                  <tr><td><code>class ctrl_reg extends uvm_object</code></td><td><code>class ctrl_reg extends uvm_reg</code></td></tr>
+                  <tr><td><code>logic enable</code></td><td><code>uvm_reg_field enable</code></td></tr>
+                  <tr><td><code>ctrl.enable = 1</code></td><td><code>ctrl.enable.set(1)</code></td></tr>
+                  <tr><td><code>ctrl.to_data()</code></td><td><code>ctrl.get()</code></td></tr>
+                  <tr><td><code>class sram_reg_block extends uvm_object</code></td><td><code>class sram_reg_block extends uvm_reg_block</code></td></tr>
+                </tbody>
+              </table>
+
+              <h2>Exercise</h2>
+              <p>Convert both files to standard UVM RAL classes using the skeleton above as a guide:</p>
+              <ol>
+                <li>Open <code>sram_reg_block.sv</code> — follow the TODO comments: change the base classes, replace the <code>logic</code> fields with <code>uvm_reg_field</code>, add <code>build()</code> to <code>ctrl_reg</code> with two <code>configure()</code> calls, and expand <code>sram_reg_block::build()</code> with the three map calls.</li>
+                <li>Open <code>mem_test_ral.sv</code> — follow the TODO comments: replace direct field assignment with <code>.set()</code>, and replace <code>to_data()</code>/<code>convert2string()</code> with <code>.get()</code>.</li>
+              </ol>
+              <blockquote><p>The <code>lsb_pos</code> argument to <code>configure()</code> replaces what <code>to_data()</code> was doing manually. <code>enable</code> sits at bit 0 (<code>lsb_pos=0</code>, size=1); <code>mode</code> sits at bits [2:1] (<code>lsb_pos=1</code>, size=2). UVM uses this to pack and unpack the register value automatically.</p></blockquote>
