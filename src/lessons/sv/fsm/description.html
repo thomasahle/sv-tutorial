@@ -33,6 +33,7 @@
                 <li><strong>WRITING</strong> — assert <code>sram_we=1</code> and return to IDLE next cycle</li>
               </ul>
               <p>Open <code>mem_ctrl.sv</code>. The two-always skeleton and default assignments are already set up. Fill in the <code>case</code> branches inside <code>always_comb</code>: the transition conditions in <code>IDLE</code>, and the output + transition for <code>READING</code> and <code>WRITING</code>.</p>
+              <p><strong>Important:</strong> Do not modify <code>state</code> in your solution — <code>state</code> is updated only by the <code>always_ff</code> block. In <code>always_comb</code> you only assign to <code>next</code> (and the outputs). The combinational block computes the <em>next</em> state; the flip-flop block applies it on the clock edge.</p>
               <blockquote><p>Keep outputs in the <code>always_comb</code> block, never in the <code>always_ff</code> block — Moore outputs are a function of state only, not of the current inputs. A <strong>Mealy FSM</strong> would also allow outputs to depend directly on inputs, giving a one-cycle faster response — but at the cost of glitchy combinational outputs that change mid-cycle whenever inputs change. Moore is the safer default for synchronous RTL.</p></blockquote>
               <h2>Testbench</h2>
               <p>The testbench cycles through all three states — idle, write command, read command — and checks that <code>sram_we</code> and <code>ready</code> assert at the right times.</p>
