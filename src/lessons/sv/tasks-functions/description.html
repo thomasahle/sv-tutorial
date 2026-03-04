@@ -15,6 +15,8 @@ Non-automatic tasks share state across calls.
 Calling a task <code>write_word(addr, data)</code> is blocking.
 If you want to "spawn and forget" you can use <code><dfn data-card="The fork ... join_none block allows you to start a task in the background without waiting for it to finish. It's like saying 'go do this, but I don't care when you're done'. This is useful for starting parallel processes or timers that run independently of the main flow.">fork</dfn></code>.
 </p>
+<p><strong>Clock and delay together.</strong> Sometimes you need both an edge and a small delay: e.g. <code>@(posedge clk); #1;</code> waits for the rising edge, then advances 1 time unit so that combinational outputs and setup are settled before you drive or sample signals. That pattern keeps stimulus and sampling aligned with the clock while avoiding glitches at the edge.</p>
+<p><strong>Simulation hang disclaimer.</strong> In some environments, using <code>@(posedge clk); #1;</code> (or similar) in a task can cause the simulation to hang or run indefinitely — for example when the clock seen by the testbench is not the same as the one driving the DUT. If that happens, use the clock from the virtual interface instead: <code>@(posedge vif.clk)</code> (and if needed <code>@(posedge vif.clk); #1;</code>), so that your waits are tied to the same clock the interface and DUT use.</p>
 <p>Your task: In <code>tb.sv</code> implement the three routine stubs:</p>
 <ul>
    <li><code>parity_check(d)</code> — a function that returns a single bit: <code>1</code> if <code>d</code> has an odd number of set bits. Hint: the reduction XOR operator <code>^d</code> computes this in one expression.</li>
